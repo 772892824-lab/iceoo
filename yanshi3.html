@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>延世韩国语3 - 智能闪卡学习系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            padding: 24px 28px 36px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            margin: 8px 0;
+        }
+        .hidden { display: none !important; }
+
+        /* 认证 */
+        #authSection { display: block; }
+        #authSection.hidden { display: none; }
+        .auth-box {
+            max-width: 460px;
+            margin: 20px auto;
+            padding: 30px 35px;
+            background: #f8fafc;
+            border-radius: 24px;
+            border: 1px solid #e9edf2;
+        }
+        .auth-box h2 { font-size: 22px; margin-bottom: 6px; color: #1a2b3c; }
+        .auth-box p { color: #6b7a8a; font-size: 14px; margin-bottom: 18px; }
+        .auth-box label { display: block; font-weight: 600; font-size: 13px; color: #2c3e50; margin-top: 12px; margin-bottom: 3px; }
+        .auth-box input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #dce3ec; font-size: 15px; outline: none; transition: 0.2s; background: white; }
+        .auth-box input:focus { border-color: #1a2b3c; box-shadow: 0 0 0 4px rgba(26,43,60,0.06); }
+        .auth-box .btn { width: 100%; margin-top: 16px; padding: 14px; font-size: 16px; }
+        .auth-box .auth-switch { text-align: center; margin-top: 14px; font-size: 14px; color: #6b7a8a; }
+        .auth-box .auth-switch a { color: #1a2b3c; font-weight: 600; cursor: pointer; text-decoration: underline; }
+        .auth-error { color: #c0392b; font-size: 13px; margin-top: 6px; display: none; }
+        .auth-error.show { display: block; }
+        .auth-success { color: #2e7d5e; font-size: 13px; margin-top: 6px; display: none; }
+        .auth-success.show { display: block; }
+
+        /* 头部 */
+        .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        h1 { font-size: 24px; font-weight: 700; color: #1a2b3c; }
+        .user-info { display: flex; align-items: center; gap: 14px; font-size: 14px; color: #4d6272; flex-wrap: wrap; }
+        .user-info .logout-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .user-info .logout-btn:hover { text-decoration: underline; }
+        .subtitle { color: #6b7a8a; font-size: 14px; border-left: 4px solid #ffb74d; padding-left: 14px; background: #f8fafc; border-radius: 0 12px 12px 0; line-height: 1.6; margin: 4px 0 16px; }
+
+        .stats-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 24px;
+            background: #f7f9fc;
+            padding: 10px 18px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2c3e50;
+            border: 1px solid #e9edf2;
+            align-items: center;
+        }
+        .stats-bar span { font-weight: 600; color: #1a2b3c; }
+        .stats-bar .fav-count { color: #e67e22; }
+        .stats-bar .round-badge { background: #1a2b3c; color: white; padding: 2px 14px; border-radius: 40px; font-size: 12px; }
+
+        .mode-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #eef2f6;
+            padding-bottom: 10px;
+        }
+        .mode-tab {
+            padding: 8px 18px;
+            border-radius: 40px;
+            background: #f1f4f8;
+            color: #3d4e5f;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .mode-tab:hover { background: #e3e9f2; }
+        .mode-tab.active { background: #1a2b3c; color: white; box-shadow: 0 4px 12px rgba(26,43,60,0.25); }
+        .mode-tab .badge { background: rgba(255,255,255,0.2); padding: 0 8px; border-radius: 40px; font-size: 11px; margin-left: 4px; }
+
+        .filter-area {
+            margin: 10px 0 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-area select { padding: 6px 14px; border-radius: 40px; border: 1.5px solid #dce3ec; font-size: 13px; background: white; outline: none; }
+        .filter-area select:focus { border-color: #1a2b3c; }
+        .word-count-badge { background: #dce5ef; padding: 2px 12px; border-radius: 40px; font-size: 13px; font-weight: 600; }
+
+        /* 闪卡 */
+        .flashcard-container { perspective: 1200px; min-height: 380px; display: flex; justify-content: center; align-items: center; }
+        .flashcard {
+            width: 100%; max-width: 680px; min-height: 340px;
+            position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0.0,0.2,1); cursor: pointer;
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard-face {
+            position: absolute; width: 100%; min-height: 340px;
+            backface-visibility: hidden; border-radius: 24px; padding: 32px 30px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+            border: 2px solid #e9edf2; background: white; box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+        }
+        .flashcard-face .label { font-size: 12px; font-weight: 600; color: #8899aa; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+        .flashcard-face .main-text { font-size: 34px; font-weight: 700; color: #0f1e2e; line-height: 1.4; word-break: break-word; }
+        .flashcard-face .main-text .small { font-size: 22px; font-weight: 400; color: #5a6e7e; }
+        .flashcard-face .sub-text { font-size: 17px; color: #4d6272; margin-top: 12px; line-height: 1.7; max-width: 90%; }
+        .flashcard-face .example { margin-top: 14px; padding: 14px 20px; background: #f5f8fc; border-radius: 14px; font-size: 16px; color: #1a2b3c; line-height: 1.6; width: 100%; max-width: 90%; text-align: left; }
+        .flashcard-face .example .ko { font-weight: 600; }
+        .flashcard-face .example .zh { color: #4d6272; font-size: 14px; margin-top: 4px; }
+        .flashcard-back { transform: rotateY(180deg); }
+        .flashcard-face .action-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; justify-content: center; }
+        .flashcard-face .action-row .btn { padding: 8px 20px; font-size: 13px; }
+        .flashcard-counter { text-align: center; font-size: 14px; color: #6b7a8a; margin-top: 14px; }
+
+        .audio-only-icon { font-size: 80px; line-height: 1; animation: pulse 2s ease-in-out infinite; cursor: pointer; user-select: none; }
+        .audio-only-icon:hover { transform: scale(1.05); }
+        .audio-only-icon .sub { font-size: 18px; color: #8899aa; display: block; margin-top: 12px; font-weight: 400; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        .btn {
+            padding: 10px 22px; border-radius: 60px; font-weight: 700; font-size: 14px;
+            border: none; cursor: pointer; transition: all 0.2s;
+            background: #eef2f6; color: #1f2e3f;
+        }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-primary { background: #1a2b3c; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #0f1e2e; }
+        .btn-outline { background: transparent; border: 2px solid #d0d9e3; }
+        .btn-outline:hover:not(:disabled) { background: #f2f6fc; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover:not(:disabled) { background: #d68910; }
+        .btn-success { background: #2e7d5e; color: white; }
+        .btn-success:hover:not(:disabled) { background: #1f5f45; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #a93226; }
+        .btn-sm { padding: 5px 14px; font-size: 12px; }
+        .speak-btn { background: none; border: none; font-size: 28px; cursor: pointer; transition: 0.15s; padding: 0 8px; }
+        .speak-btn:hover { transform: scale(1.15); }
+
+        .favorite-list-area { margin-top: 16px; padding: 12px 16px; background: #fefcf5; border-radius: 14px; border: 1px solid #f0e8d8; display: none; }
+        .favorite-list-area.show { display: block; }
+        .favorite-list-area h4 { font-size: 14px; color: #8a7a5a; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .fav-item { display: inline-block; background: #f5f0e8; padding: 3px 14px; border-radius: 40px; font-size: 13px; margin: 3px 4px 3px 0; color: #3d2e1a; cursor: pointer; transition: 0.15s; }
+        .fav-item:hover { background: #e8dcc8; }
+
+        .progress-controls {
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            margin-top: 22px; gap: 12px;
+        }
+        .progress-info { font-size: 14px; color: #5a6e7e; background: #f2f6fc; padding: 6px 18px; border-radius: 40px; }
+        .nav-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-buttons .btn { padding: 6px 16px; font-size: 13px; }
+
+        /* 测试 */
+        .test-container { padding: 10px 0; }
+        .test-question {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            border: 1px solid #e9edf2;
+            transition: 0.2s;
+        }
+        .test-question.correct { border-left: 5px solid #2e7d5e; background: #f0faf5; }
+        .test-question.wrong { border-left: 5px solid #c0392b; background: #fdf0ef; }
+        .test-question .q-header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            font-size: 13px; color: #6b7a8a; margin-bottom: 6px;
+        }
+        .test-question .q-text { font-size: 18px; font-weight: 600; color: #0f1e2e; margin-bottom: 10px; }
+        .test-question .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .test-question .q-options .opt {
+            padding: 10px 16px; border-radius: 10px; border: 2px solid #dce3ec;
+            background: white; cursor: pointer; transition: 0.15s; font-size: 15px;
+        }
+        .test-question .q-options .opt:hover:not(.disabled) { border-color: #1a2b3c; background: #f7f9fc; }
+        .test-question .q-options .opt.selected { border-color: #1a2b3c; background: #e8ecf2; }
+        .test-question .q-options .opt.correct-answer { border-color: #2e7d5e; background: #e6f5ed; }
+        .test-question .q-options .opt.wrong-answer { border-color: #c0392b; background: #fdeaea; }
+        .test-question .q-options .opt.disabled { cursor: not-allowed; opacity: 0.7; }
+        .test-question .q-feedback { margin-top: 10px; padding: 10px 14px; border-radius: 10px; font-size: 14px; display: none; line-height: 1.6; }
+        .test-question .q-feedback.show { display: block; }
+        .test-question .q-feedback.correct { background: #e6f5ed; color: #1a5a3e; }
+        .test-question .q-feedback.wrong { background: #fdeaea; color: #8a2a1a; }
+
+        .test-result { text-align: center; padding: 30px 20px; background: #f8fafc; border-radius: 20px; border: 2px solid #e9edf2; }
+        .test-result .score { font-size: 64px; font-weight: 800; color: #1a2b3c; }
+        .test-result .score-label { font-size: 18px; color: #4d6272; margin-top: 4px; }
+        .test-result .score-detail { font-size: 15px; color: #6b7a8a; margin-top: 10px; }
+        .test-result .btn { margin-top: 16px; }
+
+        .test-controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+        .test-timer { font-size: 16px; font-weight: 600; color: #1a2b3c; background: #f2f6fc; padding: 6px 18px; border-radius: 40px; }
+
+        /* 教师端 */
+        #teacherPanel { display: none; }
+        #teacherPanel.show { display: block; }
+        .teacher-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #eef2f6; }
+        .teacher-header h2 { font-size: 20px; color: #1a2b3c; }
+        .student-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+        .student-card { background: #f8fafc; border-radius: 14px; padding: 16px 18px; border: 1px solid #e9edf2; transition: 0.2s; }
+        .student-card:hover { border-color: #c5ced9; }
+        .student-card .name { font-weight: 700; color: #1a2b3c; }
+        .student-card .info { font-size: 13px; color: #6b7a8a; margin-top: 4px; }
+        .student-card .progress-bar { margin-top: 8px; height: 6px; background: #e9edf2; border-radius: 10px; overflow: hidden; }
+        .student-card .progress-bar .fill { height: 100%; background: #2e7d5e; border-radius: 10px; transition: width 0.5s; }
+        .student-card .badge { display: inline-block; padding: 1px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; margin-top: 4px; }
+        .badge.active { background: #e6f5ed; color: #2e7d5e; }
+        .badge.inactive { background: #fdeaea; color: #c0392b; }
+        .invite-box { background: #f8fafc; border-radius: 14px; padding: 16px 20px; border: 1px dashed #c5ced9; margin: 12px 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .invite-box code { background: #e9edf2; padding: 6px 18px; border-radius: 40px; font-size: 18px; font-weight: 700; letter-spacing: 2px; color: #1a2b3c; }
+
+        #studySection { display: none; }
+        #studySection.show { display: block; }
+
+        .flashcard-area-wrap { transition: opacity 0.3s ease; }
+        .flashcard-area-wrap.hidden { display: none; }
+
+        /* 轮次进度 */
+        .round-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f0f4fa;
+            padding: 6px 18px 6px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+        .round-progress .round-num {
+            background: #1a2b3c;
+            color: white;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .round-progress .status {
+            color: #6b7a8a;
+        }
+
+        @media (max-width: 600px) {
+            .app-container { padding: 14px; }
+            .flashcard-face .main-text { font-size: 24px; }
+            .mode-tab { padding: 5px 12px; font-size: 11px; }
+            .auth-box { padding: 20px; }
+            .student-list { grid-template-columns: 1fr; }
+            .test-question .q-options { grid-template-columns: 1fr; }
+            .test-result .score { font-size: 44px; }
+            .audio-only-icon { font-size: 56px; }
+            .round-progress { font-size: 12px; padding: 4px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container" id="app">
+
+    <!-- ===== 认证界面 ===== -->
+    <div id="authSection">
+        <div style="text-align:center; margin-bottom:10px;">
+            <h1 style="font-size:28px;">📘 延世韩国语3</h1>
+            <p style="color:#6b7a8a;">智能闪卡学习 + 多轮复习系统</p>
+        </div>
+        <div class="auth-box" id="loginBox">
+            <h2>👋 登录学习</h2>
+            <p>输入邀请码和姓名进入学习端</p>
+            <label>邀请码</label>
+            <input type="text" id="loginInviteCode" placeholder="请输入教师提供的邀请码">
+            <label>你的姓名</label>
+            <input type="text" id="loginName" placeholder="请输入你的姓名">
+            <div class="auth-error" id="loginError"></div>
+            <button class="btn btn-primary" id="loginBtn">进入学习</button>
+            <div class="auth-switch">还没有账号？<a id="switchToRegister">注册新账号</a></div>
+        </div>
+        <div class="auth-box hidden" id="registerBox">
+            <h2>📝 注册新账号</h2>
+            <p>输入邀请码和你的信息完成注册</p>
+            <label>邀请码</label>
+            <input type="text" id="regInviteCode" placeholder="请输入教师提供的邀请码">
+            <label>你的姓名</label>
+            <input type="text" id="regName" placeholder="请输入你的姓名">
+            <label>设置密码（可选）</label>
+            <input type="password" id="regPassword" placeholder="留空则使用默认密码">
+            <div class="auth-error" id="regError"></div>
+            <div class="auth-success" id="regSuccess"></div>
+            <button class="btn btn-primary" id="registerBtn">注册并进入学习</button>
+            <div class="auth-switch">已有账号？<a id="switchToLogin">返回登录</a></div>
+        </div>
+        <div class="auth-box" id="teacherLoginBox">
+            <h2>👨‍🏫 教师端</h2>
+            <p>输入教师密码进入管理面板</p>
+            <label>教师密码</label>
+            <input type="password" id="teacherPassword" placeholder="默认密码: teacher123">
+            <div class="auth-error" id="teacherError"></div>
+            <button class="btn btn-primary" id="teacherLoginBtn">进入教师端</button>
+            <div class="auth-switch"><a id="switchToStudentLogin">← 返回学生登录</a></div>
+        </div>
+    </div>
+
+    <!-- ===== 学习端 ===== -->
+    <div id="studySection">
+        <div class="header-row">
+            <h1>📘 延世韩国语3</h1>
+            <div class="user-info">
+                <span id="studyUserName">学生</span>
+                <span class="round-progress">
+                    <span class="round-num" id="currentRoundDisplay">第1轮</span>
+                    <span class="status" id="roundStatus">📖 学习新词</span>
+                </span>
+                <span class="word-count-badge" id="studyFavCount">⭐ 0</span>
+                <button class="logout-btn" id="logoutBtn">退出</button>
+            </div>
+        </div>
+        <div class="subtitle">智能多轮复习 · 每轮独立打乱 · 直到完全掌握</div>
+
+        <div class="stats-bar">
+            <div>📚 总单词 <span id="wordCount">0</span></div>
+            <div>🧩 总语法 <span id="grammarCount">0</span></div>
+            <div>⭐ 收藏 <span class="fav-count" id="favTotalCount">0</span></div>
+            <div>📌 <span id="currentModeLabel">韩语→中文</span></div>
+            <div>🎯 <span id="masteryDisplay">0% 掌握</span></div>
+        </div>
+
+        <div class="mode-tabs" id="modeTabs">
+            <button class="mode-tab active" data-mode="0">🇰🇷→🇨🇳 韩语闪卡</button>
+            <button class="mode-tab" data-mode="1">🇨🇳→🇰🇷 中文闪卡</button>
+            <button class="mode-tab" data-mode="2">🔊 语音闪卡</button>
+            <button class="mode-tab" data-mode="3">🧩 语法闪卡</button>
+            <button class="mode-tab" data-mode="4">📝 综合测试</button>
+        </div>
+
+        <div class="filter-area" id="filterArea">
+            <select id="topicFilter"><option value="all">📂 全部主题</option></select>
+            <select id="typeFilter"><option value="all">📖 全部类型</option><option value="word">单词</option><option value="grammar">语法</option></select>
+            <select id="favoriteFilter"><option value="all">全部</option><option value="fav">⭐ 仅收藏</option></select>
+            <span class="word-count-badge" id="filteredCount">0 项</span>
+            <button class="btn btn-sm btn-outline" id="advanceRoundBtn" title="手动进入下一轮">⏩ 下一轮</button>
+        </div>
+
+        <!-- 闪卡区域 -->
+        <div class="flashcard-area-wrap" id="flashcardArea">
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face" id="cardFront">
+                        <div class="label" id="frontLabel">📖 单词</div>
+                        <div class="main-text" id="frontMain">준비 중...</div>
+                        <div class="sub-text" id="frontSub"></div>
+                        <div class="action-row">
+                            <button class="speak-btn" id="speakFrontBtn">🔊</button>
+                            <button class="btn btn-outline" id="flipBtn">🔄 翻转</button>
+                        </div>
+                    </div>
+                    <div class="flashcard-face flashcard-back" id="cardBack">
+                        <div class="label" id="backLabel">📖 单词 · 背面</div>
+                        <div class="main-text" id="backMain">뒤집기</div>
+                        <div class="sub-text" id="backSub"></div>
+                        <div class="example" id="backExample" style="display:none;">
+                            <div class="ko" id="exampleKo"></div>
+                            <div class="zh" id="exampleZh"></div>
+                        </div>
+                        <div class="action-row">
+                            <button class="speak-btn" id="speakBackBtn">🔊</button>
+                            <button class="btn btn-warning" id="favCardBtn">⭐ 收藏</button>
+                            <button class="btn btn-success" id="masteredBtn">✅ 已掌握</button>
+                            <button class="btn btn-outline" id="flipBackBtn">🔄 翻转</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flashcard-counter" id="cardCounter">1 / 10</div>
+        </div>
+
+        <!-- 测试区域 -->
+        <div class="flashcard-area-wrap hidden" id="testArea">
+            <div class="test-controls">
+                <button class="btn btn-primary" id="startTestBtn">📝 开始新测试</button>
+                <span class="test-timer" id="testTimer">⏱️ 00:00</span>
+                <span class="word-count-badge" id="testProgress">0 / 0 题</span>
+            </div>
+            <div id="testContainer" class="test-container"></div>
+        </div>
+
+        <div class="favorite-list-area" id="favListArea">
+            <h4>
+                <span>⭐ 收藏列表 <span id="favListCount">0</span></span>
+                <span>
+                    <button class="btn btn-sm btn-outline" id="favPracticeBtn">📖 收藏专项练习</button>
+                    <button class="btn btn-sm btn-outline" id="clearFavBtn">清空</button>
+                </span>
+            </h4>
+            <div id="favListContainer"></div>
+        </div>
+
+        <div class="progress-controls" id="progressControls">
+            <div class="progress-info"><span id="progressText">0 / 0</span></div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" id="prevBtn">◀ 上一张</button>
+                <button class="btn btn-outline" id="nextBtn">下一张 ▶</button>
+                <button class="btn btn-outline" id="resetBtn">🔄 重来</button>
+                <button class="btn btn-outline" id="favToggleBtn">⭐ 收藏列表</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 教师端 ===== -->
+    <div id="teacherPanel">
+        <div class="teacher-header">
+            <h2>👨‍🏫 教师管理面板</h2>
+            <div>
+                <span style="font-size:14px;color:#6b7a8a;">邀请码: </span>
+                <code style="background:#e9edf2;padding:4px 16px;border-radius:40px;font-weight:700;" id="teacherInviteCodeDisplay">------</code>
+                <button class="btn btn-sm btn-outline" id="regenerateInviteBtn" style="margin-left:8px;">🔄 生成新码</button>
+                <button class="btn btn-sm btn-danger" id="teacherLogoutBtn" style="margin-left:12px;">退出</button>
+            </div>
+        </div>
+        <div class="invite-box">
+            <span style="font-weight:600;">📋 当前邀请码:</span>
+            <code id="teacherInviteCodeDisplay2">------</code>
+            <button class="btn btn-sm btn-outline" id="copyInviteBtn">📋 复制</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:20px;margin-bottom:16px;">
+            <div style="background:#f8fafc;padding:16px 24px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:13px;color:#6b7a8a;">总学生数</div>
+                <div style="font-size:28px;font-weight:700;" id="teacherStudentCount">0</div>
+            </div>
+            <div style="background:#f8fafc;padding:16px 24px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:13px;color:#6b7a8a;">总学习卡片</div>
+                <div style="font-size:28px;font-weight:700;" id="teacherTotalCards">0</div>
+            </div>
+            <div style="background:#f8fafc;padding:16px 24px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:13px;color:#6b7a8a;">平均进度</div>
+                <div style="font-size:28px;font-weight:700;" id="teacherAvgProgress">0%</div>
+            </div>
+        </div>
+        <h3 style="font-size:16px;color:#1a2b3c;margin-bottom:8px;">📊 学生列表</h3>
+        <div class="student-list" id="studentListContainer">
+            <p style="color:#6b7a8a;grid-column:1/-1;text-align:center;padding:20px 0;">暂无学生数据</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 数据定义
+// ============================================================
+const rawWords = [
+    { korean: '(동아리에) 들다', chinese: '加入(社团)', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '가능하다', chinese: '可能，行', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '감상', chinese: '欣赏，观赏', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '감상하다', chinese: '欣赏，观赏', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '개봉하다', chinese: '上映，开封', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '거의', chinese: '几乎，差不多', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '결과', chinese: '结果，成果', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '고민하다', chinese: '苦恼，烦恼', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '공포', chinese: '恐怖，害怕', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '과정', chinese: '过程，课程', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '관람', chinese: '观赏，观看', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '관심', chinese: '关心，兴趣', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '괜히', chinese: '白白地，徒劳地', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '국악 동아리', chinese: '国乐社团', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '기구', chinese: '器具，机构', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '다양하다', chinese: '多样，各种各样', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '단독주택', chinese: '独栋住宅，独门独院', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '동서양', chinese: '东西方', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '동영상', chinese: '视频，录像', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '두다', chinese: '放，搁', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '등록하다', chinese: '注册，登记', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '마음을 먹다', chinese: '下定决心', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '모으다', chinese: '收集，积攒', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '벗어나다', chinese: '摆脱，脱离', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '상영', chinese: '放映，上映', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '세계', chinese: '世界', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '수집하다', chinese: '收集，搜集', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '스스로', chinese: '自己，自觉地', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '에 따르면', chinese: '根据，按照', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '연주회', chinese: '演奏会，音乐会', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '오락', chinese: '娱乐，游戏', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '의논하다', chinese: '讨论，商量', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '이상', chinese: '以上，异常', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '인물화', chinese: '人物画，人像画', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '입장료', chinese: '门票，入场费', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '잔뜩', chinese: '满，满满地，极力', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '잔치', chinese: '宴会，宴席', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '재산', chinese: '财产，资产', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '조사', chinese: '调查，研究；助词', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '중요하다', chinese: '重要', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '지도자', chinese: '领导者，导师', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '탈춤 동아리', chinese: '假面舞社团', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '학원', chinese: '补习班，私立学校', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '합창동아리', chinese: '合唱团/合唱社团', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '험하다', chinese: '险恶，崎岖', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '화초', chinese: '花草，花卉', topic: '个人日常生活与余暇休闲', type: 'word' },
+    { korean: '(돈이) 들다', chinese: '花(钱)，耗费', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '(전화가) 걸리다', chinese: '(电话)接通，拨通', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '갈색', chinese: '褐色，棕色', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '경력자', chinese: '有经验者，资深人员', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '고려하다', chinese: '考虑，顾及', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '관광', chinese: '观光，旅游', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '구인 광고', chinese: '招聘广告', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '구입하다', chinese: '购买，采购', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '구하다', chinese: '寻找，寻求，求', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '굽을갈다', chinese: '换鞋底/鞋跟', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '궁금하다', chinese: '好奇，想知道', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '그렇지않아도', chinese: '正要...，不消说', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '근무 시간', chinese: '工作时间', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '능통자', chinese: '精通者，熟练者', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '다들', chinese: '大家，全部', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '덮다', chinese: '盖，合上', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '돌리다', chinese: '分发，转动', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '두께', chinese: '厚度', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '드라이', chinese: '吹风，干洗', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '맛을 보다', chinese: '品尝，尝味道', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '맡기다', chinese: '寄托，委托，寄存', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '매점', chinese: '小卖部，商店', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '머리를 다듬다', chinese: '修剪头发', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '면접', chinese: '面试', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '무표정하다', chinese: '表情冷漠，面无表情', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '문의하다', chinese: '咨询，询问', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '미용사', chinese: '美容师，美发师', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '미용실', chinese: '美容院，美发店', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '배터리', chinese: '电池', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '보수', chinese: '报酬，薪水', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '뾰족하다', chinese: '尖，尖锐', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '사용설명서를 보다', chinese: '看使用说明书', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '서비스 센터에 맡기다', chinese: '送到服务中心维修', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '서비스 센터에서 찾다', chinese: '从服务中心取回', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '세탁물', chinese: '洗涤物，脏衣服', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '수리', chinese: '修理，修缮', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '수리를 받다', chinese: '接受修理', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '수리를 요청하다', chinese: '申请修理', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '시간제', chinese: '计时制，按时', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '시루', chinese: '蒸糕木盆/甑', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '앞머리', chinese: '刘海，额前发', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '액정', chinese: '液晶屏，屏幕', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '업무', chinese: '业务，工作', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '염색', chinese: '染色，染发', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '온도', chinese: '温度', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '용서를 빌다', chinese: '求原谅', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '이기다', chinese: '赢，胜出', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '이력서', chinese: '履历书，简历', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '이사떡', chinese: '搬家年糕', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '이사를 오다', chinese: '搬来', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '인사를 가다', chinese: '去拜访/问候', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '인사를 나누다', chinese: '互致问候，打招呼', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '인사를 드리다', chinese: '致敬，致谢，问候', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '인사를 받다', chinese: '接受问候/致意', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '인사를 시키다', chinese: '介绍打招呼，让其问候', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '자기소개서', chinese: '自我介绍书', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '자판', chinese: '键盘，键盘版', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '접수시키다', chinese: '予以受理，予以登记', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '정이 많다', chinese: '重情义，感情深厚', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '정치인', chinese: '政治家，政治人物', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '조리 기구', chinese: '烹饪器具，炊具', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '주유', chinese: '加油', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '지루하다', chinese: '无聊，枯燥', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '쩔쩔매다', chinese: '张皇失措，团团转', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '초보자', chinese: '初学者，新手', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '파마를 하다', chinese: '烫发，做卷发', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '판매', chinese: '销售，贩卖', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '펴다', chinese: '铺开，展平，打开', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '화면', chinese: '画面，屏幕', topic: '自我介绍与职业生活服务', type: 'word' },
+    { korean: '건강식', chinese: '健康饮食，保健食品', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '골고루', chinese: '均匀，营养均衡地', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '과식', chinese: '暴饮暴食，吃得过多', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '규칙적이다', chinese: '有规律的', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '근육이 생기다', chinese: '长肌肉', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '기운', chinese: '力气，精神，精气', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '긴장', chinese: '紧张', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '꿈', chinese: '梦，梦想', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '노력', chinese: '努力', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '눕다', chinese: '躺下', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '다이어트', chinese: '减肥，节食', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '대중교통', chinese: '公共交通', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '대표적이다', chinese: '有代表性的', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '몸살이 나다', chinese: '患上浑身酸痛感冒', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '무리하다', chinese: '过度，勉强', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '뭐니 뭐니 해도', chinese: '不管怎么说，首推', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '미지근하다', chinese: '微温的，不冷不热的', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '민간요법', chinese: '民间疗法，偏方', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '번거롭다', chinese: '繁琐，麻烦', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '불규칙하다', chinese: '无规律的', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '불면증', chinese: '失眠症', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '비결', chinese: '秘诀', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '비만', chinese: '肥胖', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '뿌리치다', chinese: '甩开，拒绝', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '상쾌하다', chinese: '爽快，清爽', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '생선류', chinese: '鱼类', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '소비', chinese: '消费', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '소식', chinese: '少食，吃得少；消息', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '손이 가다', chinese: '费手脚，花工夫', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '스트레스', chinese: '压力', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '스트레스가 풀리다', chinese: '压力得到释放', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '식사량', chinese: '饭量，进食量', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '식습관', chinese: '饮食习惯', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '식용', chinese: '食用', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '씹다', chinese: '咀嚼，咬', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '안색', chinese: '脸色', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '야근', chinese: '夜班，加班', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '양치하다', chinese: '刷牙，漱口', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '열량을 소모하다', chinese: '消耗热量/卡路里', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '영양', chinese: '营养', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '올리다', chinese: '提高，上传，奉上', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '용기', chinese: '勇气；容器', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '위로하다', chinese: '慰问，安慰', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '유기농식품', chinese: '有机食品', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '유난히', chinese: '格外，特别', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '유용하다', chinese: '有用的，实用的', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '유지하다', chinese: '维持，保持', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '인스턴트 식품', chinese: '即食食品，速食', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '잃다', chinese: '丢失，失去', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '입구', chinese: '入口', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '잔디밭', chinese: '草坪，草地', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '장바구니', chinese: '购物篮，购物袋', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '탄산 음료', chinese: '碳酸饮料', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '화학조미료', chinese: '化学调味品，味精', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '회복하다', chinese: '恢复', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '효과', chinese: '效果', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '흡연', chinese: '吸烟', topic: '身体健康与生活习惯', type: 'word' },
+    { korean: '가입하다', chinese: '加入，入会', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '간단하다', chinese: '简单，简便', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '감동적이다', chinese: '感人的', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '공연일시', chinese: '演出日期和时间', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '공연장소', chinese: '演出场所', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '관람 연령', chinese: '观众年龄限制', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '권하다', chinese: '劝，推荐', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '당일', chinese: '当天', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '대사', chinese: '台词；大使', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '마지막', chinese: '最后，末尾', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '말할 것도 없다', chinese: '不用说，不用提', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '매진되다', chinese: '售罄', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '목소리', chinese: '声音', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '무대', chinese: '舞台', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '뮤지컬', chinese: '音乐剧', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '백문이 불여일견', chinese: '百闻不如一见', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '변경하다', chinese: '变更，更改', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '분위기', chinese: '氛围，空气', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '비슷하다', chinese: '相似', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '사물놀이', chinese: '四物农乐', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '선택하다', chinese: '选择', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '신나다', chinese: '兴奋，兴致勃勃', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '심각하다', chinese: '严重，严峻', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '알려주다', chinese: '告诉，告知', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '알리다', chinese: '告诉，告知，通知', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '연기', chinese: '演技，演出；延期', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '연주', chinese: '演奏', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '영원히', chinese: '永远地', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '의견을 말하다', chinese: '发表意见', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '인기', chinese: '人气，受欢迎', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '인상적이다', chinese: '令人印象深刻的', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '인원수', chinese: '人数', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '인터넷 사이트', chinese: '互联网网站', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '자막', chinese: '字幕', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '전시회', chinese: '展览会', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '전체', chinese: '全体，整个', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '제안하다', chinese: '提案，建议', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '좌석', chinese: '座位', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '찌르다', chinese: '扎，刺', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '투자하다', chinese: '投资', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '화려하다', chinese: '华丽', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '환불받다', chinese: '退款', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '환상적이다', chinese: '梦幻般的，奇幻的', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '후회하다', chinese: '后悔', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '훌륭하다', chinese: '优秀，杰出', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '흔들다', chinese: '摇，摇晃', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '흥겹다', chinese: '欢快，兴致勃勃', topic: '文化艺术与演出观赏', type: 'word' },
+    { korean: '(김치를) 담그다', chinese: '腌(泡菜)', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '게으르다', chinese: '懒惰，散漫', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '겨우', chinese: '勉强，仅，好不容易', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '고아원', chinese: '孤儿院', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '고집이세다', chinese: '固执，脾气倔强', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '교육자', chinese: '教育家，教育工作者', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '기부하다', chinese: '捐赠，捐献', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '끊임없다', chinese: '不断的，源源不断的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '낭비하다', chinese: '浪费', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '낯설다', chinese: '陌生的，生疏的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '냉정하다', chinese: '冷酷的，冷静的，无情的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '놀랍다', chinese: '令人吃惊的，惊人的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '능력이 뛰어나다', chinese: '能力卓越/优秀', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '대단하다', chinese: '了不起，厉害', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '돈을 벌다', chinese: '赚钱，挣钱', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '마음이 넓다', chinese: '宽容，心胸宽广', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '마치', chinese: '好像，仿佛', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '말이 많다', chinese: '话多，唠叨', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '말이다', chinese: '就是说，我是说', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '모습', chinese: '面貌，样子', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '무뚝뚝하다', chinese: '生硬，冷冰冰，不苟言笑', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '무척', chinese: '非常，很', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '미담', chinese: '美谈，佳话', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '사생활', chinese: '私生活，隐私', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '사업가', chinese: '企业家，商人', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '사투리', chinese: '方言', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '사회', chinese: '社会；主持', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '성격이 급하다', chinese: '性子急，急躁', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '성공하다', chinese: '成功', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '세계적이다', chinese: '世界级的，享誉世界的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '실력', chinese: '实力', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '억양', chinese: '抑扬顿挫，声调，口音', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '언론인', chinese: '新闻工作者，媒体人', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '업적', chinese: '业绩，功绩，成就', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '연예인', chinese: '艺人，演艺人员', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '인물', chinese: '人物，长相', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '인정을 받다', chinese: '获得认可，受到肯定', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '자신', chinese: '自己；自信', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '잘못하다', chinese: '犯错，做错，不擅长', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '장기 자랑', chinese: '才艺展示，特长表演', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '전화 예절', chinese: '电话礼仪', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '존경하다', chinese: '尊敬，敬仰', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '죽', chinese: '粥；一直', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '즐기다', chinese: '享受，喜欢，乐于', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '지나가다', chinese: '经过，过去', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '착각하다', chinese: '错觉，误以为', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '챙기다', chinese: '整理，收拾，照顾，吃', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '통통하다', chinese: '胖乎乎的，丰满的', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '패션쇼', chinese: '时装秀，时装发布会', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '평', chinese: '评价，评论；坪', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '혹시', chinese: '或许，万一，如果', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '흐뭇하다', chinese: '欣慰，满足', topic: '性格特征与人际交往', type: 'word' },
+    { korean: '각자', chinese: '各自', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '건의하다', chinese: '建议，向...建言', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '고생하다', chinese: '辛苦，受苦', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '과장님', chinese: '科长', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '그냥', chinese: '就那样，就，白白地', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '기대하다', chinese: '期待，期盼', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '덕분에', chinese: '多亏，托福', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '마술', chinese: '魔术', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '목적', chinese: '目的', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '부담하다', chinese: '负担，分担，承担', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '빈대떡', chinese: '绿豆饼，煎饼', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '산낙지', chinese: '活章鱼', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '새내기', chinese: '新生，新手', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '손아랫사람', chinese: '晚辈，小辈，下级', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '손윗사람', chinese: '长辈，长者，上级', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '슬슬', chinese: '慢慢地，渐渐地', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '시간을 내다', chinese: '抽时间', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '식', chinese: '仪式，仪式典礼', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '신입생', chinese: '新生', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '신입생 환영회', chinese: '新生欢迎会', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '실수하다', chinese: '失误，犯错', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '아까', chinese: '刚才', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '아깝다', chinese: '可惜，舍不得，浪费', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안 그래도', chinese: '不那样也...，正要', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부', chinese: '问候，安好', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부 문자를 보내다', chinese: '发问候短信', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부 인사를 드리다', chinese: '致以问候', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부 전화를 하다', chinese: '打问候电话', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부 편지를 쓰다', chinese: '写问候信', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부가 궁금하다', chinese: '关心近况，好奇安好', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부를 묻다', chinese: '问候近况', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '안부를 전하다', chinese: '传达问候', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '야', chinese: '呀，喂；阿(非敬语呼格)', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '야유회', chinese: '野游，郊游', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '여부', chinese: '是否，与否', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '오랜만이다', chinese: '好久不见', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '오리엔테이션', chinese: '迎新介绍会，Orientation', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '오해', chinese: '误会', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '일단', chinese: '首先，暂时，一旦', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '준비 중이다', chinese: '准备中，筹备中', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '지식', chinese: '知识', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '참석하다', chinese: '出席，参加', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '회갑잔치', chinese: '花甲宴，六十寿宴', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '회식', chinese: '聚餐', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '회신', chinese: '回复，回信', topic: '社交聚会与礼仪', type: 'word' },
+    { korean: '(커피를) 뽑다', chinese: '冲(咖啡)，取出，拔出', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '개성', chinese: '个性，独特风格', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '계속', chinese: '继续，一直', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '그럴리가요', chinese: '怎么会那样呢，不会吧', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '그만', chinese: '停止，就此，到此为止', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '꾸미다', chinese: '打扮，装饰，编造', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '끼리', chinese: '在...之间，同一伙人', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '내용', chinese: '内容', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '다닥다닥', chinese: '密密麻麻地，紧密地', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '동성', chinese: '同性', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '들르다', chinese: '顺便去，路过，拜访', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '렌즈', chinese: '镜片，隐形眼镜', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '멀리서', chinese: '在远处，从远处', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '무조건', chinese: '无条件地，绝对', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '문화 충격', chinese: '文化冲击', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '문화권', chinese: '文化圈', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '변명하다', chinese: '辩解，狡辩', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '부담', chinese: '负担，压力', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '부딪치다', chinese: '碰撞，遭遇', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '불만', chinese: '不满', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '불평하다', chinese: '抱怨，发牢骚', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '비밀', chinese: '秘密', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '비위생적이다', chinese: '不卫生的', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '사과하다', chinese: '道歉，谢罪', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '사이', chinese: '关系；间隔，距离', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '생강차', chinese: '生姜茶', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '설득하다', chinese: '说服，劝服', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '시간이 나다', chinese: '有空，抽出时间', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '식사 예절', chinese: '就餐礼仪', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '알아듣다', chinese: '听懂，听明白', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '양해를 구하다', chinese: '寻求谅解，求得原谅', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '어떡하다', chinese: '怎么办，如何是好', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '어색하다', chinese: '尴尬，别扭，生硬', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '언어 예절', chinese: '语言礼仪', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '오해를 사다', chinese: '招致误会，引起误解', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '오해하다', chinese: '误会，误解', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '오히려', chinese: '反而，相反地', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '일기장', chinese: '日记本', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '젖다', chinese: '淋湿，濡湿', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '제대로', chinese: '好好地，顺利地，如实地', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '지방', chinese: '地方，外地，脂肪', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '지원하다', chinese: '支援，支持；申请，报考', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '팔짱을 끼다', chinese: '挽胳膊，袖手旁观', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '할 수 없이', chinese: '无可奈何地，不得不', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '행동', chinese: '行动，举止', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '횟수', chinese: '次数', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '효과적이다', chinese: '有效的，高效的', topic: '语言学习与跨文化交流', type: 'word' },
+    { korean: '(기분이) 상하다', chinese: '伤(心)，弄坏(心情)，受损', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '(도시락을) 싸다', chinese: '带/装(便当)，打包，包裹', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '간식', chinese: '零食，点心', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '걱정을 하다', chinese: '担心，忧虑', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '게시판', chinese: '布告栏，告示牌', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '결국', chinese: '结果，最终', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '공연', chinese: '公演，戏剧表演', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '관계자', chinese: '相关人员，有关人士', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '교육', chinese: '教育', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '구체적이다', chinese: '具体的', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '그밖에', chinese: '除此之外，另外', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '기타', chinese: '吉他；其他', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '나누다', chinese: '分享，分配，除以', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '납부', chinese: '缴纳，付', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '담임 선생님', chinese: '班主任老师', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '당장', chinese: '立刻，马上', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '도시락', chinese: '便当，饭盒', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '등록금', chinese: '学费，注册费', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '마침', chinese: '恰好，刚好', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '말 못할', chinese: '难以言表的，无法言说的', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '맡다', chinese: '承担，负责，闻，保管', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '면접시험', chinese: '面试考试', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '모국어', chinese: '母语', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '문제가 생기다', chinese: '出现问题', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '비상약', chinese: '常备药，应急药品', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '상관없다', chinese: '没有关系，不相干', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '상담 교사', chinese: '辅导老师，咨询顾问', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '상담실', chinese: '辅导室，咨询室', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '상담하다', chinese: '咨询，倾诉辅导', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '성적표', chinese: '成绩单', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '스승', chinese: '恩师，导师', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '심사', chinese: '审查，评审', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '아무', chinese: '任何，什么，谁(用于否定句/疑问句)', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '아무리', chinese: '无论如何，不管怎样', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '어둡다', chinese: '暗，阴暗，悲观', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '어찌나', chinese: '多么，怎么会那么', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '언어 교환', chinese: '语言交换，语言互助', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '예의', chinese: '礼貌，礼仪', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '용돈', chinese: '零花钱', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '원서', chinese: '志愿书，原著', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '육식', chinese: '吃肉，肉食', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '응모하다', chinese: '应征，投稿，参赛', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '일정', chinese: '行程，日程安排', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '입학하다', chinese: '入学', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '저축하다', chinese: '储蓄，存钱', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '조건', chinese: '条件', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '조사', chinese: '调查，研究；助词', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '조언', chinese: '建议，忠告', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '준비물', chinese: '准备物品', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '지다', chinese: '输，败；落，沉', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '직접적으로', chinese: '直接地', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '채식', chinese: '素食', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '한국학', chinese: '韩国学', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '합격자', chinese: '合格者，被录取者', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '해결하다', chinese: '解决', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '현지인', chinese: '当地人', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '회원', chinese: '会员，成员', topic: '学校生活与教育咨询', type: 'word' },
+    { korean: '갑자기', chinese: '突然，忽而', topic: '职场办公与商务', type: 'word' },
+    { korean: '거래처', chinese: '客户，交易往来单位', topic: '职场办公与商务', type: 'word' },
+    { korean: '거절을 당하다', chinese: '遭到拒绝，被拒', topic: '职场办公与商务', type: 'word' },
+    { korean: '거절을 하다', chinese: '拒绝', topic: '职场办公与商务', type: 'word' },
+    { korean: '곤란하다', chinese: '困难，难办，尴尬', topic: '职场办公与商务', type: 'word' },
+    { korean: '귀하다', chinese: '贵重，珍贵，希罕', topic: '职场办公与商务', type: 'word' },
+    { korean: '기린', chinese: '长颈鹿', topic: '职场办公与商务', type: 'word' },
+    { korean: '기술', chinese: '技术，技能，技巧', topic: '职场办公与商务', type: 'word' },
+    { korean: '기운이없다', chinese: '没精打采，无力', topic: '职场办公与商务', type: 'word' },
+    { korean: '내밀다', chinese: '伸出，递出', topic: '职场办公与商务', type: 'word' },
+    { korean: '도움을 청하다', chinese: '请求帮助，求助', topic: '职场办公与商务', type: 'word' },
+    { korean: '떨어지다[거리]', chinese: '隔，离，相距', topic: '职场办公与商务', type: 'word' },
+    { korean: '마중을 나가다', chinese: '去迎接/接人', topic: '职场办公与商务', type: 'word' },
+    { korean: '물러나다', chinese: '退下，后退，退出', topic: '职场办公与商务', type: 'word' },
+    { korean: '뭐', chinese: '什么；哎呀，嘛', topic: '职场办公与商务', type: 'word' },
+    { korean: '부탁을 들어주다', chinese: '帮人忙，答应请求', topic: '职场办公与商务', type: 'word' },
+    { korean: '부탁을 받다', chinese: '接受托付/请求', topic: '职场办公与商务', type: 'word' },
+    { korean: '분명하다', chinese: '明显的，明确的', topic: '职场办公与商务', type: 'word' },
+    { korean: '불가능하다', chinese: '不可能的', topic: '职场办公与商务', type: 'word' },
+    { korean: '사모님', chinese: '夫人，师母，太太', topic: '职场办公与商务', type: 'word' },
+    { korean: '성의가 없다', chinese: '没有诚意，敷衍', topic: '职场办公与商务', type: 'word' },
+    { korean: '속담', chinese: '俗语，谚语', topic: '职场办公与商务', type: 'word' },
+    { korean: '순서', chinese: '顺序，次序', topic: '职场办公与商务', type: 'word' },
+    { korean: '승낙', chinese: '应允，同意，答应', topic: '职场办公与商务', type: 'word' },
+    { korean: '안되다', chinese: '不行，不可以；可怜', topic: '职场办公与商务', type: 'word' },
+    { korean: '어쩐지', chinese: '怪不得，难怪', topic: '职场办公与商务', type: 'word' },
+    { korean: '의상', chinese: '服装，衣着', topic: '职场办公与商务', type: 'word' },
+    { korean: '잔소리', chinese: '唠叨，碎碎念', topic: '职场办公与商务', type: 'word' },
+    { korean: '전통 악기', chinese: '传统乐器', topic: '职场办公与商务', type: 'word' },
+    { korean: '절약하다', chinese: '节约，节省', topic: '职场办公与商务', type: 'word' },
+    { korean: '정직하다', chinese: '诚实的，正直的', topic: '职场办公与商务', type: 'word' },
+    { korean: '중심지', chinese: '中心地，核心地带', topic: '职场办公与商务', type: 'word' },
+    { korean: '추천서', chinese: '推荐信', topic: '职场办公与商务', type: 'word' },
+    { korean: '통역', chinese: '翻译，口译', topic: '职场办公与商务', type: 'word' },
+    { korean: '파악하다', chinese: '把握，掌握，了解', topic: '职场办公与商务', type: 'word' },
+    { korean: '풀다', chinese: '解开，解除，解(题)', topic: '职场办公与商务', type: 'word' },
+    { korean: '필기하다', chinese: '记笔记', topic: '职场办公与商务', type: 'word' },
+    { korean: '한계', chinese: '界限，限度，极限', topic: '职场办公与商务', type: 'word' },
+    { korean: '한꺼번에', chinese: '一下子，一口气，一次性', topic: '职场办公与商务', type: 'word' },
+    { korean: '가사', chinese: '歌词；家务', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '가정하다', chinese: '假设，假定', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '결과적으로', chinese: '结果上，最终而言', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '경우', chinese: '情况，场合；礼貌', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '관객', chinese: '观众', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '관련', chinese: '相关，关联', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '귀국하다', chinese: '回国，归国', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '그립다', chinese: '思念，想念，怀念', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '기능', chinese: '功能，机能，作用', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '기억하다', chinese: '记住，记忆', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '기적', chinese: '奇迹', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '나타나다', chinese: '出现，显露', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '늘다', chinese: '增加，增长，提高', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '단순히', chinese: '单纯地，仅仅', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '단증', chinese: '段位证(跆拳道等)', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '단짝친구', chinese: '挚友，闺蜜，死党', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '대통령', chinese: '总统', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '대표', chinese: '代表', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '드디어', chinese: '终于，总算', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '들키다', chinese: '被发现，穿帮，败露', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '땡땡이치다', chinese: '逃学，旷课，开小差', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '떠오르다', chinese: '浮现，想起，升起', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '만족하다', chinese: '满足，满意', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '말이 나온 김에', chinese: '顺便说，既然说到这儿', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '변하다', chinese: '变化，改变', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '사정', chinese: '情况，处境，原委', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '상상', chinese: '想象，设想', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '상상하다', chinese: '想象，假想', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '상태', chinese: '状态，状况', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '상황', chinese: '情况，局势，形势', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '새롭다', chinese: '崭新的，新鲜的', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '세월', chinese: '岁月，光阴，时间', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '소비자', chinese: '消费者', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '수도', chinese: '首都；自来水', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '시간이 흐르다', chinese: '时间流逝/过去', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '신기록', chinese: '新纪录', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '신기술', chinese: '新技术', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '신상품', chinese: '新商品，新品', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '신제품', chinese: '新产品', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '신형', chinese: '新型，新款', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '실망하다', chinese: '失望', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '아쉽다', chinese: '可惜，遗憾，不舍', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '알려지다', chinese: '为人所知，出名', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '양쪽', chinese: '两侧，双方', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '어느새', chinese: '不知不觉中，转眼间', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '예상하다', chinese: '预测，预料', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '예전', chinese: '以前，从前', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '원래', chinese: '本来，原来', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '유혹', chinese: '诱惑', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '이기적이다', chinese: '自私的', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '이루다', chinese: '达成，实现，构成', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '자부심', chinese: '自豪感，自尊心', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '정물화', chinese: '静物画', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '정하다', chinese: '规定，决定，约定', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '좋아지다', chinese: '变好，好转', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '준비', chinese: '准备，筹划', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '참고', chinese: '参考', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '추측하다', chinese: '推测，猜测', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '태어나다', chinese: '出生，诞生', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '판매되다', chinese: '售卖，被售出', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '표현하다', chinese: '表达，表现', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '풍경화', chinese: '风景画', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '한가운데', chinese: '正中央，正中心', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '향상되다', chinese: '提升，提高', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '회상', chinese: '回想，追忆', topic: '社会变迁与环保公益', type: 'word' },
+    { korean: '후회', chinese: '后悔，懊悔', topic: '社会变迁与环保公益', type: 'word' }
+];
+
+const grammarData = [
+    { korean: '-던데요', chinese: '回想亲身经历后说明；“我发现……呢”', topic: '语法', type: 'grammar' },
+    { korean: '-네요', chinese: '对新发现的事实表示感叹；“……啊”', topic: '语法', type: 'grammar' },
+    { korean: '-는 편이다', chinese: '比较倾向于……；算是……', topic: '语法', type: 'grammar' },
+    { korean: '-고요', chinese: '而且……；补充说明', topic: '语法', type: 'grammar' },
+    { korean: '-는데도', chinese: '尽管……却……；即使……还是……', topic: '语法', type: 'grammar' },
+    { korean: '-기만 하다', chinese: '只……；光是……', topic: '语法', type: 'grammar' },
+    { korean: '-자마자', chinese: '一……就……', topic: '语法', type: 'grammar' },
+    { korean: '-는대요/ㄴ대요/대요', chinese: '听说……；据说……', topic: '语法', type: 'grammar' },
+    { korean: '-(으)려던 참이다', chinese: '正打算……；正准备……的时候', topic: '语法', type: 'grammar' },
+    { korean: '-(으)ㄹ 텐데', chinese: '应该……；想必……；本来会……', topic: '语法', type: 'grammar' },
+    { korean: '-거든요', chinese: '因为……；其实是因为……；说明背景', topic: '语法', type: 'grammar' },
+    { korean: '-고말고요', chinese: '当然……；那当然了', topic: '语法', type: 'grammar' },
+    { korean: '-었었-', chinese: '曾经……过；过去曾……但现在已经不同', topic: '语法', type: 'grammar' },
+    { korean: '-던데', chinese: '回想过去经历；“我当时发现……”', topic: '语法', type: 'grammar' },
+    { korean: '被动（피동）', chinese: '被……；某动作自然发生', topic: '语法', type: 'grammar' },
+    { korean: '-아/어 놓다', chinese: '做完……并保持该状态', topic: '语法', type: 'grammar' },
+    { korean: '-아/어야', chinese: '只有……才……；必须……', topic: '语法', type: 'grammar' },
+    { korean: '-(는)다면', chinese: '如果……的话；假设……', topic: '语法', type: 'grammar' },
+    { korean: '-아/어야지요', chinese: '应该……；理应……；得……才行', topic: '语法', type: 'grammar' },
+    { korean: '使动（사동）', chinese: '让/使某人做……', topic: '语法', type: 'grammar' },
+    { korean: '-(이)라든가/라든가', chinese: '……之类；比如……', topic: '语法', type: 'grammar' },
+    { korean: '-는다고 하던데', chinese: '听说……，所以/那么……；听说……来着', topic: '语法', type: 'grammar' },
+    { korean: '-는다고 보다', chinese: '认为……；可以认为……', topic: '语法', type: 'grammar' },
+    { korean: '-는답니다', chinese: '听说……；告诉你……；亲切地说明', topic: '语法', type: 'grammar' },
+    { korean: '만 못하다', chinese: '不如……；比不上……', topic: '语法', type: 'grammar' },
+    { korean: '-는 대신에', chinese: '代替……；作为交换；而不是……', topic: '语法', type: 'grammar' },
+    { korean: '-는다고 해서', chinese: '因为听说……就……；不能因为……就……', topic: '语法', type: 'grammar' },
+    { korean: '-고서', chinese: '做完……之后……；在……之后', topic: '语法', type: 'grammar' },
+    { korean: '-을 뿐만 아니라', chinese: '不仅……而且……', topic: '语法', type: 'grammar' },
+    { korean: '-어야지', chinese: '必须……；我得……；应该……', topic: '语法', type: 'grammar' },
+    { korean: '-을 만하다', chinese: '值得……；值得一试；还可以……', topic: '语法', type: 'grammar' },
+    { korean: '-을걸요', chinese: '应该……吧；我觉得大概……', topic: '语法', type: 'grammar' },
+    { korean: '-는 모양이다', chinese: '看样子……；看来……', topic: '语法', type: 'grammar' },
+    { korean: '-을 뿐이다', chinese: '只是……；仅仅……', topic: '语法', type: 'grammar' },
+    { korean: '-는다면서요?', chinese: '听说……是吗？；不是说……吗？', topic: '语法', type: 'grammar' },
+    { korean: '-만하다', chinese: '和……差不多；达到……程度', topic: '语法', type: 'grammar' },
+    { korean: '-기란', chinese: '要……是……；做……这件事', topic: '语法', type: 'grammar' },
+    { korean: '-었던 것 같다', chinese: '好像曾经……；似乎……过', topic: '语法', type: 'grammar' },
+    { korean: '-었을 텐데', chinese: '当时应该……；本来应该……吧', topic: '语法', type: 'grammar' },
+    { korean: '-거든', chinese: '如果……的话；一旦……就……', topic: '语法', type: 'grammar' },
+    { korean: '-어/아/어다가', chinese: '做完……后带到另一处继续做', topic: '语法', type: 'grammar' },
+    { korean: '-이라도/라도', chinese: '哪怕……；至少……；退而求其次', topic: '语法', type: 'grammar' },
+    { korean: '-더라', chinese: '我发现……；原来……；回想亲身经历', topic: '语法', type: 'grammar' },
+    { korean: '-다니요?', chinese: '竟然……？；怎么会……？', topic: '语法', type: 'grammar' },
+    { korean: '-고 나서', chinese: '做完……之后……', topic: '语法', type: 'grammar' },
+    { korean: '-지', chinese: '……吧；应该……；提议/确认', topic: '语法', type: 'grammar' },
+    { korean: '-는다니까', chinese: '我都说了……；强调自己的话/理由', topic: '语法', type: 'grammar' },
+    { korean: '-지요', chinese: '……吧；请……吧；委婉建议/确认', topic: '语法', type: 'grammar' },
+    { korean: '-는다는 것이', chinese: '本想……结果却……；原本打算A却做成B', topic: '语法', type: 'grammar' },
+    { korean: '-(으)ㄹ까 봐', chinese: '担心……；怕……', topic: '语法', type: 'grammar' },
+    { korean: '-아/어/여 버리다', chinese: '完全……；彻底……；带有遗憾、后悔等情绪', topic: '语法', type: 'grammar' },
+    { korean: '-잖아요', chinese: '不是……嘛；你也知道……', topic: '语法', type: 'grammar' },
+    { korean: '-고 해서', chinese: '因为……之类的原因；以……为理由', topic: '语法', type: 'grammar' },
+    { korean: '-지 그래요', chinese: '为什么不……呢？；不如……吧', topic: '语法', type: 'grammar' },
+    { korean: '-고도', chinese: '即使……却……；做了……仍然……', topic: '语法', type: 'grammar' },
+    { korean: '-단 말이에요?', chinese: '你的意思是……？；竟然说……？再次确认', topic: '语法', type: 'grammar' },
+    { korean: '-(으)면서도', chinese: '尽管……却……；一边……一边……', topic: '语法', type: 'grammar' },
+    { korean: '-도록 하다', chinese: '尽量……；要求/促使……；务必……', topic: '语法', type: 'grammar' },
+    { korean: '어찌나 -는지', chinese: '非常……；……得不得了', topic: '语法', type: 'grammar' },
+    { korean: '-고 말다', chinese: '最终……；结果……；遗憾地……', topic: '语法', type: 'grammar' },
+    { korean: '-고는', chinese: '做了……之后；做完……却……', topic: '语法', type: 'grammar' },
+    { korean: '-(으)ㄹ지도 모르다', chinese: '也许……；可能……', topic: '语法', type: 'grammar' },
+    { korean: '-(으)면 되다', chinese: '只要……就可以', topic: '语法', type: 'grammar' },
+    { korean: '-(이)라서', chinese: '因为是……；由于……', topic: '语法', type: 'grammar' },
+    { korean: '-기는요', chinese: '哪有……；才不是……；谦虚否定/反驳', topic: '语法', type: 'grammar' },
+    { korean: '-느라고', chinese: '因为忙于……而导致……（负面结果）', topic: '语法', type: 'grammar' },
+    { korean: '담화 표지', chinese: '话语标记；用于引起注意、停顿、转换话题', topic: '语法', type: 'grammar' },
+    { korean: '-게', chinese: '使……地；达到某种状态', topic: '语法', type: 'grammar' },
+    { korean: '-다니', chinese: '竟然……；没想到……；对事实表示惊讶', topic: '语法', type: 'grammar' },
+    { korean: '-게 하다', chinese: '让/使某人……', topic: '语法', type: 'grammar' },
+    { korean: '-는다지요?', chinese: '听说……对吧？；不是说……吗？', topic: '语法', type: 'grammar' },
+    { korean: '-(으)ㄹ 건가요?', chinese: '打算……吗？；准备……吗？', topic: '语法', type: 'grammar' },
+    { korean: '-다가도', chinese: '即使正在……也会突然……；状态随时转变', topic: '语法', type: 'grammar' },
+    { korean: '-곤 하다', chinese: '经常……；习惯性地……', topic: '语法', type: 'grammar' },
+    { korean: '전만 해도', chinese: '就在……之前还……；不久前还……', topic: '语法', type: 'grammar' },
+    { korean: '-는다고 할 수 있다', chinese: '可以说……；可以称为……', topic: '语法', type: 'grammar' },
+    { korean: '-었다면', chinese: '如果当时……的话（与过去事实相反）', topic: '语法', type: 'grammar' },
+    { korean: '-었을 것이다', chinese: '当时应该会……；本来会……', topic: '语法', type: 'grammar' },
+    { korean: '-듯이', chinese: '像……一样；正如……', topic: '语法', type: 'grammar' },
+    { korean: '은/는 물론', chinese: '不仅……；……当然也……', topic: '语法', type: 'grammar' }
+];
+
+const wordItems = rawWords;
+const grammarItems = grammarData;
+const allItems = [...wordItems, ...grammarItems];
+
+// ============================================================
+// 存储管理
+// ============================================================
+function getStorage() {
+    const data = localStorage.getItem('yonsei_study_data_v4');
+    if (data) { try { return JSON.parse(data); } catch(e) {} }
+    return { students: [], inviteCode: 'YONSEI3-2024', teacherPassword: 'teacher123' };
+}
+
+function saveStorage(data) {
+    localStorage.setItem('yonsei_study_data_v4', JSON.stringify(data));
+}
+
+function getCurrentUser() {
+    const user = sessionStorage.getItem('yonsei_current_user_v4');
+    return user ? JSON.parse(user) : null;
+}
+
+function setCurrentUser(user) {
+    sessionStorage.setItem('yonsei_current_user_v4', JSON.stringify(user));
+}
+
+function clearCurrentUser() {
+    sessionStorage.removeItem('yonsei_current_user_v4');
+}
+
+// ============================================================
+// 核心学习逻辑 - 多轮复习
+// ============================================================
+// 每个学生数据包含:
+// - currentRound: 当前轮次 (从1开始)
+// - masteredItems: 已掌握的单词/语法列表 (按key存储)
+// - favorites: 收藏列表
+// - roundHistory: 每轮的完成记录
+
+function getStudentData(name, inviteCode) {
+    const storage = getStorage();
+    let student = storage.students.find(s => s.name === name && s.inviteCode === inviteCode);
+    if (!student) return null;
+    return student;
+}
+
+function updateStudentData(student) {
+    const storage = getStorage();
+    const idx = storage.students.findIndex(s => s.name === student.name && s.inviteCode === student.inviteCode);
+    if (idx >= 0) {
+        storage.students[idx] = student;
+        saveStorage(storage);
+        setCurrentUser(student);
+    }
+}
+
+function getCurrentRoundItems(student) {
+    // 获取当前轮次需要学习的项目
+    const round = student.currentRound || 1;
+    const mastered = student.masteredItems || [];
+    const favList = student.favorites || [];
+
+    // 如果是收藏专项练习模式
+    if (student.favPracticeMode) {
+        return { items: favList, isFavPractice: true };
+    }
+
+    // 从所有项目中排除已掌握的
+    const allKeys = allItems.map(item => item.korean + '|||' + item.chinese);
+    const masteredKeys = mastered.map(m => m.korean + '|||' + m.chinese);
+    
+    let available = allItems.filter(item => {
+        const key = item.korean + '|||' + item.chinese;
+        return !masteredKeys.includes(key);
+    });
+
+    // 如果所有项目都已掌握，返回空
+    if (available.length === 0) {
+        return { items: [], isFavPractice: false, allMastered: true };
+    }
+
+    // 打乱顺序
+    return { items: shuffleArray([...available]), isFavPractice: false, allMastered: false };
+}
+
+function markAsMastered(student, item) {
+    if (!student.masteredItems) student.masteredItems = [];
+    const key = item.korean + '|||' + item.chinese;
+    if (!student.masteredItems.some(m => m.korean === item.korean && m.chinese === item.chinese)) {
+        student.masteredItems.push({ korean: item.korean, chinese: item.chinese, type: item.type });
+        // 更新进度
+        const total = allItems.length;
+        const masteredCount = student.masteredItems.length;
+        student.progress = Math.min(100, Math.round((masteredCount / total) * 100));
+        // 记录总学习量
+        student.totalReviewed = (student.totalReviewed || 0) + 1;
+        updateStudentData(student);
+        return true;
+    }
+    return false;
+}
+
+function advanceRound(student) {
+    // 检查是否所有项目都已掌握
+    const total = allItems.length;
+    const masteredCount = (student.masteredItems || []).length;
+    if (masteredCount >= total) {
+        // 所有项目已掌握，重置轮次但保留掌握记录
+        student.currentRound = (student.currentRound || 1) + 1;
+        // 重置掌握列表，开始新一轮复习
+        student.masteredItems = [];
+        student.progress = 0;
+        updateStudentData(student);
+        return { reset: true, round: student.currentRound };
+    }
+    // 正常进入下一轮
+    student.currentRound = (student.currentRound || 1) + 1;
+    updateStudentData(student);
+    return { reset: false, round: student.currentRound };
+}
+
+// ============================================================
+// 全局状态
+// ============================================================
+let currentMode = 0;
+let currentIndex = 0;
+let filteredItems = [];
+let currentItem = null;
+let isFlipped = false;
+let favorites = [];
+let testQuestions = [];
+let testAnswers = [];
+let testStarted = false;
+let testSubmitted = false;
+let timerInterval = null;
+let seconds = 0;
+let isTestMode = false;
+let currentStudent = null;
+let isFavPracticeMode = false;
+
+// ============================================================
+// DOM 引用
+// ============================================================
+const frontMain = document.getElementById('frontMain');
+const frontSub = document.getElementById('frontSub');
+const frontLabel = document.getElementById('frontLabel');
+const backMain = document.getElementById('backMain');
+const backSub = document.getElementById('backSub');
+const backLabel = document.getElementById('backLabel');
+const backExample = document.getElementById('backExample');
+const exampleKo = document.getElementById('exampleKo');
+const exampleZh = document.getElementById('exampleZh');
+const cardCounter = document.getElementById('cardCounter');
+const flashcard = document.getElementById('flashcard');
+const flipBtn = document.getElementById('flipBtn');
+const flipBackBtn = document.getElementById('flipBackBtn');
+const speakFrontBtn = document.getElementById('speakFrontBtn');
+const speakBackBtn = document.getElementById('speakBackBtn');
+const favCardBtn = document.getElementById('favCardBtn');
+const masteredBtn = document.getElementById('masteredBtn');
+
+// ============================================================
+// 工具函数
+// ============================================================
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getModeLabel(mode) {
+    return ['韩语→中文', '中文→韩语', '语音闪卡', '语法闪卡', '综合测试'][mode] || '未知';
+}
+
+function getTopics() {
+    const set = new Set();
+    wordItems.forEach(item => { if (item.topic) set.add(item.topic); });
+    return [...set];
+}
+
+function isFavorite(item, favList) {
+    if (!item) return false;
+    return favList.some(f => f.korean === item.korean && f.chinese === item.chinese);
+}
+
+function toggleFavoriteItem(item, favList) {
+    if (!item) return favList;
+    const idx = favList.findIndex(f => f.korean === item.korean && f.chinese === item.chinese);
+    if (idx >= 0) { favList.splice(idx, 1); }
+    else { favList.push({ korean: item.korean, chinese: item.chinese, type: item.type, topic: item.topic }); }
+    return favList;
+}
+
+function speakKorean(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.85;
+    window.speechSynthesis.speak(utterance);
+}
+
+function getExampleForItem(item) {
+    const examples = {
+        '가능하다': { ko: '시간이 가능하면 내일 만나요.', zh: '如果有时间的话，明天见吧。' },
+        '감상하다': { ko: '음악을 감상하는 것을 좋아해요.', zh: '我喜欢欣赏音乐。' },
+        '고민하다': { ko: '진로에 대해 고민하고 있어요.', zh: '我正在为前途苦恼。' },
+        '관심': { ko: '한국 문화에 관심이 많아요.', zh: '我对韩国文化很感兴趣。' },
+        '다양하다': { ko: '한국 음식은 다양해요.', zh: '韩国食物很丰富多样。' },
+        '등록하다': { ko: '학원에 등록했어요.', zh: '我在补习班报名了。' },
+        '벗어나다': { ko: '스트레스에서 벗어나고 싶어요.', zh: '我想摆脱压力。' },
+        '수집하다': { ko: '우표를 수집하는 것이 취미예요.', zh: '收集邮票是我的爱好。' },
+        '연주회': { ko: '주말에 피아노 연주회가 있어요.', zh: '周末有钢琴演奏会。' },
+        '입장료': { ko: '입장료가 얼마예요?', zh: '门票多少钱？' },
+        '재산': { ko: '그는 재산이 많아요.', zh: '他有很多财产。' },
+        '중요하다': { ko: '건강이 가장 중요해요.', zh: '健康最重要。' },
+        '학원': { ko: '영어 학원에 다니고 있어요.', zh: '我正在上英语补习班。' },
+        '궁금하다': { ko: '결과가 궁금해요.', zh: '我对结果很好奇。' },
+        '면접': { ko: '내일 면접이 있어요.', zh: '明天有面试。' },
+        '미용실': { ko: '미용실에 가서 머리를 잘랐어요.', zh: '我去美发店剪了头发。' },
+        '업무': { ko: '업무를 처리하느라 바빠요.', zh: '我忙着处理业务。' },
+        '지루하다': { ko: '영화가 지루했어요.', zh: '电影很无聊。' },
+        '건강식': { ko: '건강식을 챙겨 먹어요.', zh: '我注意吃健康食品。' },
+        '규칙적이다': { ko: '규칙적인 생활을 해요.', zh: '我过着有规律的生活。' },
+        '다이어트': { ko: '다이어트를 하고 있어요.', zh: '我正在减肥。' },
+        '스트레스': { ko: '스트레스를 많이 받아요.', zh: '我压力很大。' },
+        '식습관': { ko: '식습관을 바꿔야 해요.', zh: '要改变饮食习惯。' },
+        '효과': { ko: '운동은 건강에 효과가 좋아요.', zh: '运动对健康效果很好。' },
+        '감동적이다': { ko: '영화가 정말 감동적이었어요.', zh: '那部电影真的很感人。' },
+        '분위기': { ko: '카페 분위기가 좋아요.', zh: '咖啡厅的氛围很好。' },
+        '인기': { ko: '이 가수는 인기가 많아요.', zh: '这位歌手很受欢迎。' },
+        '화려하다': { ko: '무대가 화려해요.', zh: '舞台很华丽。' },
+        '훌륭하다': { ko: '그는 훌륭한 사람이에요.', zh: '他是一个优秀的人。' },
+        '존경하다': { ko: '저는 부모님을 존경해요.', zh: '我尊敬父母。' },
+        '성공하다': { ko: '사업에 성공했어요.', zh: '他在事业上成功了。' },
+        '실력': { ko: '한국어 실력이 많이 늘었어요.', zh: '韩语实力提高了很多。' },
+        '기대하다': { ko: '내일이 기대돼요.', zh: '我很期待明天。' },
+        '참석하다': { ko: '회의에 참석했어요.', zh: '我参加了会议。' },
+        '오해': { ko: '오해를 하지 마세요.', zh: '请不要误会。' },
+        '비밀': { ko: '비밀을 지켜야 해요.', zh: '要守住秘密。' },
+        '사과하다': { ko: '잘못을 사과했어요.', zh: '我为错误道歉了。' },
+        '어색하다': { ko: '분위기가 어색했어요.', zh: '气氛很尴尬。' },
+        '교육': { ko: '교육이 중요해요.', zh: '教育很重要。' },
+        '해결하다': { ko: '문제를 해결했어요.', zh: '我解决了问题。' },
+        '기술': { ko: '첨단 기술이 발달했어요.', zh: '高新技术发达了。' },
+        '통역': { ko: '통역을 잘해요.', zh: '他很擅长翻译。' },
+        '풀다': { ko: '문제를 풀었어요.', zh: '我解出了这道题。' },
+        '변하다': { ko: '세상이 변하고 있어요.', zh: '世界正在变化。' },
+        '상상하다': { ko: '미래를 상상해 봐요.', zh: '想象一下未来吧。' },
+        '기억하다': { ko: '그날을 기억해요.', zh: '我记得那天。' },
+        '드디어': { ko: '드디어 해냈어요!', zh: '终于做到了！' },
+        '그립다': { ko: '고향이 그리워요.', zh: '我想念故乡。' },
+        '만족하다': { ko: '결과에 만족해요.', zh: '我对结果很满意。' },
+        '표현하다': { ko: '감정을 표현하는 것이 중요해요.', zh: '表达感情很重要。' }
+    };
+    const key = item.korean.replace(/[()]/g, '').split(' ')[0];
+    if (examples[key]) return examples[key];
+    return { ko: `${item.korean} (예문)`, zh: `${item.chinese} (例句)` };
+}
+
+// ============================================================
+// 获取各模式数据
+// ============================================================
+function getItemsForMode(mode) {
+    const student = getCurrentUser();
+    if (!student) return [];
+
+    const favList = student.favorites || [];
+    const topic = document.getElementById('topicFilter')?.value || 'all';
+    const type = document.getElementById('typeFilter')?.value || 'all';
+    const favFilter = document.getElementById('favoriteFilter')?.value || 'all';
+
+    let items = [];
+
+    // 如果是收藏专项练习模式
+    if (isFavPracticeMode) {
+        items = favList.length > 0 ? [...favList] : [];
+        if (items.length === 0) {
+            alert('收藏夹为空，请先收藏一些单词或语法！');
+            isFavPracticeMode = false;
+            return getItemsForMode(mode);
+        }
+        // 应用类型筛选
+        if (type !== 'all') {
+            items = items.filter(item => item.type === type);
+        }
+        return shuffleArray([...items]);
+    }
+
+    // 正常模式
+    if (mode === 3) {
+        items = [...grammarItems];
+    } else if (mode === 4) {
+        items = [...allItems];
+    } else {
+        items = [...wordItems];
+    }
+
+    // 应用筛选
+    if (topic !== 'all') {
+        items = items.filter(item => item.topic === topic);
+    }
+    if (type !== 'all' && mode !== 3) {
+        items = items.filter(item => item.type === type);
+    }
+    if (favFilter === 'fav') {
+        items = items.filter(item => isFavorite(item, favList));
+    }
+
+    return shuffleArray([...items]);
+}
+
+// ============================================================
+// 闪卡渲染
+// ============================================================
+function renderCard(item, mode, favList) {
+    if (!item) {
+        frontMain.textContent = '🎉 所有卡片已完成！';
+        frontSub.textContent = '点击"下一轮"进入新一轮复习';
+        backMain.textContent = '恭喜完成！';
+        backSub.textContent = '你已掌握本轮所有内容';
+        backExample.style.display = 'none';
+        favCardBtn.style.display = 'none';
+        masteredBtn.style.display = 'none';
+        return;
+    }
+
+    const isGram = item.type === 'grammar';
+    const label = isGram ? '🧩 语法' : '📖 单词';
+    const isFav = isFavorite(item, favList);
+
+    favCardBtn.textContent = isFav ? '⭐ 已收藏' : '☆ 收藏';
+    favCardBtn.style.background = isFav ? '#fef9e7' : '';
+    favCardBtn.style.display = 'inline-block';
+    masteredBtn.style.display = 'inline-block';
+
+    isFlipped = false;
+    flashcard.classList.remove('flipped');
+
+    if (mode === 2) {
+        frontLabel.textContent = '🔊 语音闪卡 · 正面';
+        frontMain.innerHTML = `
+            <div class="audio-only-icon" onclick="playAudio()">
+                🔊
+                <span class="sub">点击喇叭播放音频</span>
+            </div>
+        `;
+        frontMain.style.fontSize = 'inherit';
+        frontSub.textContent = '👆 点击翻转查看答案';
+        speakFrontBtn.style.display = 'none';
+        backLabel.textContent = '🔊 语音闪卡 · 背面';
+        backMain.textContent = item.korean + ' → ' + item.chinese;
+        backMain.style.fontSize = '28px';
+        backSub.textContent = isGram ? '语法：' + item.korean : '';
+        const ex = getExampleForItem(item);
+        backExample.style.display = 'block';
+        exampleKo.textContent = ex.ko;
+        exampleZh.textContent = ex.zh;
+        window.playAudio = function() { speakKorean(item.korean); };
+        return;
+    }
+
+    frontMain.innerHTML = '';
+    frontMain.style.fontSize = '';
+
+    if (mode === 0) {
+        frontLabel.textContent = label + ' · 正面';
+        frontMain.textContent = item.korean;
+        frontSub.textContent = '点击翻转查看中文';
+        speakFrontBtn.style.display = 'inline-block';
+        backLabel.textContent = label + ' · 背面';
+        backMain.textContent = item.chinese;
+        backSub.textContent = isGram ? '语法用法' : '中文释义';
+        const ex = getExampleForItem(item);
+        backExample.style.display = 'block';
+        exampleKo.textContent = ex.ko;
+        exampleZh.textContent = ex.zh;
+    } else if (mode === 1) {
+        frontLabel.textContent = label + ' · 正面';
+        frontMain.textContent = item.chinese;
+        frontSub.textContent = '点击翻转查看韩语';
+        speakFrontBtn.style.display = 'none';
+        backLabel.textContent = label + ' · 背面';
+        backMain.textContent = item.korean;
+        backSub.textContent = isGram ? '语法形式' : '韩语表达';
+        const ex = getExampleForItem(item);
+        backExample.style.display = 'block';
+        exampleKo.textContent = ex.ko;
+        exampleZh.textContent = ex.zh;
+    } else if (mode === 3) {
+        frontLabel.textContent = '🧩 语法闪卡 · 正面';
+        frontMain.textContent = item.korean;
+        frontMain.style.fontSize = '34px';
+        frontSub.textContent = '点击翻转查看中文释义和例句';
+        speakFrontBtn.style.display = 'inline-block';
+        backLabel.textContent = '🧩 语法闪卡 · 背面';
+        backMain.textContent = item.chinese;
+        backMain.style.fontSize = '28px';
+        backSub.textContent = '语法用法';
+        const ex = getExampleForItem(item);
+        backExample.style.display = 'block';
+        exampleKo.textContent = ex.ko;
+        exampleZh.textContent = ex.zh;
+    }
+
+    const total = filteredItems.length;
+    cardCounter.textContent = `${currentIndex + 1} / ${total}`;
+    document.getElementById('progressText').textContent = `${currentIndex + 1} / ${total}`;
+}
+
+function showCard(index) {
+    if (filteredItems.length === 0) {
+        frontMain.textContent = '🎉 所有卡片已完成！';
+        frontSub.textContent = '点击"下一轮"进入新一轮复习';
+        cardCounter.textContent = '0 / 0';
+        document.getElementById('progressText').textContent = '0 / 0';
+        return;
+    }
+    if (index < 0) index = 0;
+    if (index >= filteredItems.length) index = filteredItems.length - 1;
+    currentIndex = index;
+    currentItem = filteredItems[currentIndex];
+
+    const student = getCurrentUser();
+    const favList = student ? student.favorites || [] : [];
+    renderCard(currentItem, currentMode, favList);
+    updateStats();
+}
+
+function flipCard() {
+    isFlipped = !isFlipped;
+    flashcard.classList.toggle('flipped');
+}
+
+// ============================================================
+// 筛选
+// ============================================================
+function populateFilters() {
+    const topics = getTopics();
+    const topicFilter = document.getElementById('topicFilter');
+    topicFilter.innerHTML = '<option value="all">📂 全部主题</option>';
+    topics.forEach(t => {
+        topicFilter.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+    topicFilter.innerHTML += `<option value="语法">🧩 语法</option>`;
+}
+
+function applyFilters() {
+    if (isTestMode) return;
+    const mode = currentMode;
+    filteredItems = getItemsForMode(mode);
+    currentIndex = 0;
+    if (filteredItems.length === 0) {
+        frontMain.textContent = '没有匹配的卡片';
+        frontSub.textContent = '请调整筛选条件或添加收藏';
+        cardCounter.textContent = '0 / 0';
+        document.getElementById('filteredCount').textContent = '0 项';
+        return;
+    }
+    document.getElementById('filteredCount').textContent = `${filteredItems.length} 项`;
+    showCard(currentIndex);
+}
+
+// ============================================================
+// 统计更新
+// ============================================================
+function updateStats() {
+    document.getElementById('wordCount').textContent = wordItems.length;
+    document.getElementById('grammarCount').textContent = grammarItems.length;
+
+    const student = getCurrentUser();
+    if (student) {
+        const favList = student.favorites || [];
+        favorites = favList;
+        document.getElementById('favTotalCount').textContent = favList.length;
+        document.getElementById('studyFavCount').textContent = '⭐ ' + favList.length;
+        
+        const total = allItems.length;
+        const mastered = (student.masteredItems || []).length;
+        const pct = Math.min(100, Math.round((mastered / total) * 100));
+        document.getElementById('masteryDisplay').textContent = pct + '% 掌握';
+        
+        const round = student.currentRound || 1;
+        document.getElementById('currentRoundDisplay').textContent = '第' + round + '轮';
+        
+        if (isFavPracticeMode) {
+            document.getElementById('roundStatus').textContent = '⭐ 收藏专项练习';
+        } else if (mastered >= total) {
+            document.getElementById('roundStatus').textContent = '🎉 全部完成！';
+        } else {
+            const remaining = total - mastered;
+            document.getElementById('roundStatus').textContent = '📖 剩余 ' + remaining + ' 个待掌握';
+        }
+    }
+    
+    document.getElementById('currentModeLabel').textContent = getModeLabel(currentMode);
+    if (currentItem) {
+        const favList = student ? student.favorites || [] : [];
+        const isFav = isFavorite(currentItem, favList);
+        favCardBtn.textContent = isFav ? '⭐ 已收藏' : '☆ 收藏';
+    }
+}
+
+// ============================================================
+// 导航
+// ============================================================
+function handlePrev() {
+    if (filteredItems.length === 0 || isTestMode) return;
+    if (currentIndex > 0) { currentIndex--; showCard(currentIndex); }
+    else { currentIndex = filteredItems.length - 1; showCard(currentIndex); }
+}
+
+function handleNext() {
+    if (filteredItems.length === 0 || isTestMode) return;
+    if (currentIndex < filteredItems.length - 1) { currentIndex++; showCard(currentIndex); }
+    else {
+        // 重新打乱
+        filteredItems = getItemsForMode(currentMode);
+        shuffleArray(filteredItems);
+        currentIndex = 0;
+        showCard(currentIndex);
+    }
+}
+
+function handleReset() {
+    if (isTestMode) return;
+    filteredItems = getItemsForMode(currentMode);
+    shuffleArray(filteredItems);
+    currentIndex = 0;
+    showCard(currentIndex);
+}
+
+// ============================================================
+// 掌握功能
+// ============================================================
+function handleMastered() {
+    if (!currentItem || isTestMode) return;
+    const student = getCurrentUser();
+    if (!student) return;
+    
+    if (markAsMastered(student, currentItem)) {
+        // 从当前列表中移除已掌握的项目
+        const key = currentItem.korean + '|||' + currentItem.chinese;
+        filteredItems = filteredItems.filter(item => {
+            return (item.korean + '|||' + item.chinese) !== key;
+        });
+        
+        if (filteredItems.length === 0) {
+            frontMain.textContent = '🎉 本轮所有卡片已完成！';
+            frontSub.textContent = '点击"下一轮"进入新一轮复习';
+            cardCounter.textContent = '0 / 0';
+            document.getElementById('progressText').textContent = '0 / 0';
+            updateStats();
+            return;
+        }
+        
+        if (currentIndex >= filteredItems.length) {
+            currentIndex = filteredItems.length - 1;
+        }
+        showCard(currentIndex);
+        updateStats();
+        renderFavList();
+    } else {
+        alert('此卡片已掌握或已移除');
+    }
+}
+
+// ============================================================
+// 轮次管理
+// ============================================================
+function handleAdvanceRound() {
+    const student = getCurrentUser();
+    if (!student) return;
+    
+    const total = allItems.length;
+    const masteredCount = (student.masteredItems || []).length;
+    
+    if (masteredCount < total) {
+        if (!confirm(`还有 ${total - masteredCount} 个卡片未掌握，确定要进入下一轮吗？未掌握的卡片会保留到下一轮继续学习。`)) {
+            return;
+        }
+    }
+    
+    const result = advanceRound(student);
+    if (result.reset) {
+        alert(`🎉 恭喜完成第 ${result.round - 1} 轮！\n开始第 ${result.round} 轮复习，所有卡片重新打乱！`);
+    } else {
+        alert(`进入第 ${result.round} 轮！\n已掌握 ${masteredCount} 个，剩余 ${total - masteredCount} 个待学习。`);
+    }
+    
+    // 退出收藏专项练习模式
+    isFavPracticeMode = false;
+    student.favPracticeMode = false;
+    updateStudentData(student);
+    
+    // 刷新列表
+    filteredItems = getItemsForMode(currentMode);
+    currentIndex = 0;
+    showCard(currentIndex);
+    updateStats();
+    renderFavList();
+}
+
+// ============================================================
+// 收藏专项练习
+// ============================================================
+function startFavPractice() {
+    const student = getCurrentUser();
+    if (!student) return;
+    const favList = student.favorites || [];
+    if (favList.length === 0) {
+        alert('收藏夹为空，请先收藏一些单词或语法！');
+        return;
+    }
+    
+    isFavPracticeMode = true;
+    student.favPracticeMode = true;
+    updateStudentData(student);
+    
+    // 切换到闪卡模式
+    switchMode(0);
+    filteredItems = getItemsForMode(currentMode);
+    currentIndex = 0;
+    if (filteredItems.length > 0) {
+        showCard(currentIndex);
+    }
+    updateStats();
+    document.getElementById('roundStatus').textContent = '⭐ 收藏专项练习 (' + filteredItems.length + ' 项)';
+}
+
+// ============================================================
+// 收藏功能
+// ============================================================
+function renderFavList() {
+    const student = getCurrentUser();
+    const favList = student ? student.favorites || [] : [];
+    const container = document.getElementById('favListContainer');
+    const count = document.getElementById('favListCount');
+    if (favList.length === 0) {
+        container.innerHTML = '<span style="color:#aaa;font-size:14px;">暂无收藏</span>';
+        count.textContent = '0';
+        return;
+    }
+    count.textContent = favList.length;
+    container.innerHTML = favList.map((f, i) =>
+        `<span class="fav-item" data-idx="${i}">${f.korean} → ${f.chinese}</span>`
+    ).join('');
+    document.querySelectorAll('.fav-item').forEach(el => {
+        el.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx);
+            const fav = favorites[idx];
+            const found = allItems.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
+            if (found >= 0) {
+                document.getElementById('topicFilter').value = 'all';
+                document.getElementById('typeFilter').value = 'all';
+                document.getElementById('favoriteFilter').value = 'all';
+                applyFilters();
+                const pos = filteredItems.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
+                if (pos >= 0) { currentIndex = pos; showCard(currentIndex); }
+            }
+        });
+    });
+}
+
+function handleFavCard() {
+    const student = getCurrentUser();
+    if (!student || !currentItem || isTestMode) return;
+    const storage = getStorage();
+    const studentData = storage.students.find(s => s.name === student.name && s.inviteCode === student.inviteCode);
+    if (!studentData) return;
+
+    studentData.favorites = toggleFavoriteItem(currentItem, studentData.favorites);
+    storage.students = storage.students.map(s => s.name === student.name && s.inviteCode === student.inviteCode ? studentData : s);
+    saveStorage(storage);
+    setCurrentUser(studentData);
+    favorites = studentData.favorites;
+    renderFavList();
+    updateStats();
+    renderCard(currentItem, currentMode, favorites);
+}
+
+// ============================================================
+// 测试系统
+// ============================================================
+function generateTest() {
+    const shuffledWords = shuffleArray([...wordItems]);
+    const shuffledGrammars = shuffleArray([...grammarItems]);
+    const usedWords = new Set();
+    const usedGrammars = new Set();
+    const questions = [];
+
+    // 选词填空 (5题)
+    let fillBlankCount = 0;
+    for (const w of shuffledWords) {
+        if (fillBlankCount >= 5) break;
+        if (usedWords.has(w.korean)) continue;
+        usedWords.add(w.korean);
+        const options = shuffleArray([w.chinese, ...shuffleArray([...wordItems]).filter(x => !usedWords.has(x.korean)).slice(0, 3).map(x => x.chinese).filter(x => x !== w.chinese)]);
+        const finalOpts = shuffleArray([w.chinese, ...options.filter(x => x !== w.chinese).slice(0, 3)]);
+        while (finalOpts.length < 4) {
+            const extra = shuffleArray([...wordItems]).find(x => !finalOpts.includes(x.chinese) && !usedWords.has(x.korean));
+            if (extra) finalOpts.push(extra.chinese);
+            else break;
+        }
+        questions.push({
+            type: 'fill_blank',
+            question: `"${w.korean}"의 올바른 뜻은?`,
+            answer: w.chinese,
+            options: shuffleArray(finalOpts.slice(0, 4)),
+            explanation: `"${w.korean}"은(는) "${w.chinese}"(으)로 해석됩니다.`,
+            wordKey: w.korean
+        });
+        fillBlankCount++;
+    }
+
+    // 选择正确单词 (5题)
+    let selectWordCount = 0;
+    for (const w of shuffledWords) {
+        if (selectWordCount >= 5) break;
+        if (usedWords.has(w.korean)) continue;
+        usedWords.add(w.korean);
+        const options = shuffleArray([w.korean, ...shuffleArray([...wordItems]).filter(x => !usedWords.has(x.korean)).slice(0, 3).map(x => x.korean).filter(x => x !== w.korean)]);
+        const finalOpts = shuffleArray([w.korean, ...options.filter(x => x !== w.korean).slice(0, 3)]);
+        while (finalOpts.length < 4) {
+            const extra = shuffleArray([...wordItems]).find(x => !finalOpts.includes(x.korean) && !usedWords.has(x.korean));
+            if (extra) finalOpts.push(extra.korean);
+            else break;
+        }
+        questions.push({
+            type: 'select_word',
+            question: `"${w.chinese}"의 올바른 한국어 단어는?`,
+            answer: w.korean,
+            options: shuffleArray(finalOpts.slice(0, 4)),
+            explanation: `"${w.chinese}"은(는) 한국어로 "${w.korean}"입니다.`,
+            wordKey: w.korean
+        });
+        selectWordCount++;
+    }
+
+    // 同义替换 (3题)
+    let synonymCount = 0;
+    for (const w of shuffledWords) {
+        if (synonymCount >= 3) break;
+        if (usedWords.has(w.korean)) continue;
+        usedWords.add(w.korean);
+        const others = wordItems.filter(x => !usedWords.has(x.korean));
+        const opts = shuffleArray([w.chinese, ...shuffleArray(others).slice(0, 3).map(x => x.chinese).filter(x => x !== w.chinese)]);
+        while (opts.length < 4) {
+            const extra = shuffleArray([...wordItems]).find(x => !opts.includes(x.chinese) && !usedWords.has(x.korean));
+            if (extra) opts.push(extra.chinese);
+            else break;
+        }
+        questions.push({
+            type: 'synonym',
+            question: `"${w.korean}"의 의미로 가장 가까운 것은?`,
+            answer: w.chinese,
+            options: shuffleArray(opts.slice(0, 4)),
+            explanation: `"${w.korean}"은(는) "${w.chinese}"(와)과 의미가 가장 가깝습니다.`,
+            wordKey: w.korean
+        });
+        synonymCount++;
+    }
+
+    // 反义替换 (3题)
+    const antonymPairs = [
+        ['가능하다', '불가능하다'], ['중요하다', '사소하다'], ['다양하다', '단일하다'],
+        ['규칙적이다', '불규칙하다'], ['유용하다', '무용하다'], ['화려하다', '수수하다']
+    ];
+    let antonymCount = 0;
+    for (const pair of antonymPairs) {
+        if (antonymCount >= 3) break;
+        const word = wordItems.find(w => w.korean === pair[0]);
+        const antonymWord = wordItems.find(w => w.korean === pair[1]);
+        if (word && antonymWord && !usedWords.has(word.korean) && !usedWords.has(antonymWord.korean)) {
+            usedWords.add(word.korean);
+            usedWords.add(antonymWord.korean);
+            const opts = shuffleArray([antonymWord.chinese, ...shuffleArray(wordItems).filter(x => !usedWords.has(x.korean)).slice(0, 3).map(x => x.chinese).filter(x => x !== antonymWord.chinese)]);
+            while (opts.length < 4) {
+                const extra = shuffleArray([...wordItems]).find(x => !opts.includes(x.chinese) && !usedWords.has(x.korean));
+                if (extra) opts.push(extra.chinese);
+                else break;
+            }
+            questions.push({
+                type: 'antonym',
+                question: `"${word.korean}"의 반대 의미를 가진 단어는?`,
+                answer: antonymWord.chinese,
+                options: shuffleArray(opts.slice(0, 4)),
+                explanation: `"${word.korean}"의 반대말은 "${antonymWord.korean}"(으)로, "${antonymWord.chinese}"(을)를 의미합니다.`,
+                wordKey: word.korean
+            });
+            antonymCount++;
+        }
+    }
+
+    // 语法选择 (8题)
+    let grammarCount = 0;
+    for (const g of shuffledGrammars) {
+        if (grammarCount >= 8) break;
+        if (usedGrammars.has(g.korean)) continue;
+        usedGrammars.add(g.korean);
+        const opts = shuffleArray([g.chinese, ...shuffleArray([...grammarItems]).filter(x => !usedGrammars.has(x.korean)).slice(0, 3).map(x => x.chinese).filter(x => x !== g.chinese)]);
+        while (opts.length < 4) {
+            const extra = shuffleArray([...grammarItems]).find(x => !opts.includes(x.chinese) && !usedGrammars.has(x.korean));
+            if (extra) opts.push(extra.chinese);
+            else break;
+        }
+        questions.push({
+            type: 'grammar',
+            question: `다음 중 "${g.korean}"의 올바른 의미는?`,
+            answer: g.chinese,
+            options: shuffleArray(opts.slice(0, 4)),
+            explanation: `"${g.korean}"은(는) "${g.chinese}"(으)로 사용됩니다.`,
+            wordKey: g.korean
+        });
+        grammarCount++;
+    }
+
+    return shuffleArray(questions);
+}
+
+function startTest() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    seconds = 0;
+    document.getElementById('testTimer').textContent = '⏱️ 00:00';
+    testStarted = true;
+    testSubmitted = false;
+
+    testQuestions = generateTest();
+    testAnswers = testQuestions.map(() => null);
+    renderTest();
+    document.getElementById('testProgress').textContent = `0 / ${testQuestions.length} 题`;
+
+    timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('testTimer').textContent = `⏱️ ${m}:${s}`;
+    }, 1000);
+}
+
+function renderTest() {
+    const container = document.getElementById('testContainer');
+    if (testQuestions.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#6b7a8a;padding:30px 0;">没有足够的题目，请点击"开始新测试"重新生成</p>';
+        return;
+    }
+
+    let html = '';
+    testQuestions.forEach((q, idx) => {
+        const answered = testAnswers[idx] !== null;
+        const isCorrect = answered && testAnswers[idx] === q.answer;
+        const isWrong = answered && testAnswers[idx] !== q.answer;
+        const statusClass = isCorrect ? 'correct' : (isWrong ? 'wrong' : '');
+
+        html += `
+        <div class="test-question ${statusClass}" id="q_${idx}">
+            <div class="q-header">
+                <span>${getQuestionTypeLabel(q.type)} · 第 ${idx+1} 题</span>
+                <span>${answered ? (isCorrect ? '✅ 正确' : '❌ 错误') : '⏳ 未作答'}</span>
+            </div>
+            <div class="q-text">${q.question}</div>
+            <div class="q-options">
+                ${q.options.map(opt => `
+                    <div class="opt ${answered && opt === q.answer ? 'correct-answer' : ''} ${answered && testAnswers[idx] === opt && opt !== q.answer ? 'wrong-answer' : ''} ${answered ? 'disabled' : ''} ${testAnswers[idx] === opt ? 'selected' : ''}"
+                         onclick="${answered ? '' : `selectTestOption(${idx}, '${opt.replace(/"/g, '\\"')}')`}">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="q-feedback ${answered ? 'show' : ''} ${isCorrect ? 'correct' : (isWrong ? 'wrong' : '')}">
+                ${answered ? (isCorrect ? '✅ 正确！' : `❌ 正确答案: ${q.answer}`) : ''}
+                ${answered ? `<br><span style="font-size:13px;color:#6b7a8a;">📖 ${q.explanation || ''}</span>` : ''}
+            </div>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    document.getElementById('testProgress').textContent = `${answeredCount} / ${testQuestions.length} 题`;
+
+    if (answeredCount === testQuestions.length && !testSubmitted) {
+        testSubmitted = true;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        setTimeout(showTestResult, 500);
+    }
+}
+
+function getQuestionTypeLabel(type) {
+    const map = {
+        'fill_blank': '📝 选词填空',
+        'select_word': '🔍 选择单词',
+        'synonym': '🔄 同义替换',
+        'antonym': '🔀 反义替换',
+        'grammar': '🧩 语法选择'
+    };
+    return map[type] || '📝 选择题';
+}
+
+function selectTestOption(qIdx, value) {
+    if (testSubmitted) return;
+    if (testAnswers[qIdx] !== null) return;
+    testAnswers[qIdx] = value;
+    renderTest();
+
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    if (answeredCount === testQuestions.length && !testSubmitted) {
+        testSubmitted = true;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        setTimeout(showTestResult, 800);
+    }
+}
+
+function showTestResult() {
+    let correct = 0;
+    testQuestions.forEach((q, idx) => {
+        if (testAnswers[idx] === q.answer) correct++;
+    });
+    const total = testQuestions.length;
+    const score = Math.round((correct / total) * 100);
+
+    const resultHtml = `
+    <div class="test-result">
+        <div class="score">${score}</div>
+        <div class="score-label">总分 (${correct}/${total})</div>
+        <div class="score-detail">
+            ${score >= 60 ? '🎉 恭喜通过！' : '💪 继续加油！'}
+            ${score >= 60 ? '你已掌握大部分内容！' : '建议复习错题并再次尝试。'}
+            <br>⏱️ 用时: ${document.getElementById('testTimer').textContent.replace('⏱️ ', '')}
+        </div>
+        <button class="btn btn-primary" onclick="startTest()">🔄 重新测试</button>
+        <button class="btn btn-outline" onclick="showWrongAnswers()">📖 查看错题</button>
+    </div>
+    `;
+
+    const container = document.getElementById('testContainer');
+    const existingResult = container.querySelector('.test-result');
+    if (existingResult) { existingResult.outerHTML = resultHtml; }
+    else { container.insertAdjacentHTML('afterbegin', resultHtml); }
+
+    document.getElementById('testProgress').textContent = `${total} / ${total} 题 ✅ 完成`;
+}
+
+function showWrongAnswers() {
+    let wrongHtml = '<div style="margin-top:16px;padding:16px;background:#fdf0ef;border-radius:14px;border-left:4px solid #c0392b;">';
+    wrongHtml += '<h4 style="margin-bottom:10px;color:#8a2a1a;">📖 错题回顾</h4>';
+    let hasWrong = false;
+    testQuestions.forEach((q, idx) => {
+        if (testAnswers[idx] !== q.answer) {
+            hasWrong = true;
+            wrongHtml += `
+            <div style="padding:10px 14px;background:white;border-radius:10px;margin-bottom:8px;border:1px solid #f0d8d8;">
+                <div style="font-weight:600;">${q.question}</div>
+                <div style="color:#c0392b;">❌ 你的答案: ${testAnswers[idx] || '未作答'}</div>
+                <div style="color:#2e7d5e;">✅ 正确答案: ${q.answer}</div>
+                <div style="font-size:13px;color:#6b7a8a;margin-top:4px;">${q.explanation || ''}</div>
+            </div>
+            `;
+        }
+    });
+    if (!hasWrong) { wrongHtml += '<p style="color:#2e7d5e;">🎉 全部正确，没有错题！</p>'; }
+    wrongHtml += '</div>';
+    document.getElementById('testContainer').insertAdjacentHTML('beforeend', wrongHtml);
+}
+
+// ============================================================
+// 模式切换
+// ============================================================
+function switchMode(mode) {
+    isTestMode = (mode === 4);
+    currentMode = mode;
+    document.getElementById('currentModeLabel').textContent = getModeLabel(mode);
+
+    const flashcardArea = document.getElementById('flashcardArea');
+    const testArea = document.getElementById('testArea');
+    const filterArea = document.getElementById('filterArea');
+    const progressControls = document.getElementById('progressControls');
+
+    if (mode === 4) {
+        flashcardArea.classList.add('hidden');
+        testArea.classList.remove('hidden');
+        filterArea.style.display = 'none';
+        progressControls.style.display = 'none';
+        if (!testStarted) { startTest(); }
+    } else {
+        flashcardArea.classList.remove('hidden');
+        testArea.classList.add('hidden');
+        filterArea.style.display = 'flex';
+        progressControls.style.display = 'flex';
+        filteredItems = getItemsForMode(mode);
+        currentIndex = 0;
+        if (filteredItems.length > 0) { showCard(currentIndex); }
+        updateStats();
+    }
+}
+
+// ============================================================
+// 认证逻辑
+// ============================================================
+function showAuth() {
+    document.getElementById('authSection').style.display = 'block';
+    document.getElementById('studySection').classList.remove('show');
+    document.getElementById('studySection').style.display = 'none';
+    document.getElementById('teacherPanel').classList.remove('show');
+    document.getElementById('teacherPanel').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('teacherLoginBox').style.display = 'block';
+}
+
+function showStudy() {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('studySection').style.display = 'block';
+    document.getElementById('studySection').classList.add('show');
+    document.getElementById('teacherPanel').classList.remove('show');
+    document.getElementById('teacherPanel').style.display = 'none';
+    switchMode(0);
+}
+
+function showTeacher() {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('studySection').classList.remove('show');
+    document.getElementById('studySection').style.display = 'none';
+    document.getElementById('teacherPanel').style.display = 'block';
+    document.getElementById('teacherPanel').classList.add('show');
+    renderTeacherPanel();
+}
+
+// 认证事件绑定
+function handleLogin() {
+    const code = document.getElementById('loginInviteCode').value.trim();
+    const name = document.getElementById('loginName').value.trim();
+    const error = document.getElementById('loginError');
+    if (!code || !name) {
+        error.textContent = '请填写邀请码和姓名';
+        error.classList.add('show');
+        return;
+    }
+    const storage = getStorage();
+    const student = storage.students.find(s => s.inviteCode === code && s.name === name);
+    if (!student) {
+        error.textContent = '邀请码或姓名不正确，请检查';
+        error.classList.add('show');
+        return;
+    }
+    error.classList.remove('show');
+    if (!student.masteredItems) student.masteredItems = [];
+    if (!student.currentRound) student.currentRound = 1;
+    setCurrentUser(student);
+    favorites = student.favorites || [];
+    currentStudent = student;
+    isFavPracticeMode = student.favPracticeMode || false;
+    showStudy();
+    populateFilters();
+    applyFilters();
+    document.getElementById('studyUserName').textContent = name + ' 同学';
+    renderFavList();
+    updateStats();
+}
+
+function handleRegister() {
+    const code = document.getElementById('regInviteCode').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const password = document.getElementById('regPassword').value.trim() || 'default';
+    const error = document.getElementById('regError');
+    const success = document.getElementById('regSuccess');
+    if (!code || !name) {
+        error.textContent = '请填写邀请码和姓名';
+        error.classList.add('show');
+        return;
+    }
+    const storage = getStorage();
+    if (storage.inviteCode !== code) {
+        error.textContent = '邀请码无效，请向教师获取正确邀请码';
+        error.classList.add('show');
+        return;
+    }
+    if (storage.students.some(s => s.name === name)) {
+        error.textContent = '该姓名已被注册，请使用其他姓名';
+        error.classList.add('show');
+        return;
+    }
+    error.classList.remove('show');
+    const newStudent = {
+        name: name,
+        inviteCode: code,
+        password: password,
+        favorites: [],
+        masteredItems: [],
+        currentRound: 1,
+        favPracticeMode: false,
+        progress: 0,
+        totalReviewed: 0,
+        testScores: [],
+        lastActive: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+    storage.students.push(newStudent);
+    saveStorage(storage);
+    success.textContent = '✅ 注册成功！正在进入学习...';
+    success.classList.add('show');
+    setCurrentUser(newStudent);
+    favorites = [];
+    currentStudent = newStudent;
+    setTimeout(() => {
+        success.classList.remove('show');
+        showStudy();
+        populateFilters();
+        applyFilters();
+        document.getElementById('studyUserName').textContent = name + ' 同学';
+        renderFavList();
+        updateStats();
+    }, 800);
+}
+
+function handleTeacherLogin() {
+    const pwd = document.getElementById('teacherPassword').value.trim() || 'teacher123';
+    const storage = getStorage();
+    const error = document.getElementById('teacherError');
+    if (pwd !== storage.teacherPassword) {
+        error.textContent = '教师密码错误';
+        error.classList.add('show');
+        return;
+    }
+    error.classList.remove('show');
+    showTeacher();
+}
+
+function handleLogout() {
+    clearCurrentUser();
+    favorites = [];
+    currentStudent = null;
+    isFavPracticeMode = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    showAuth();
+}
+
+// ============================================================
+// 教师端
+// ============================================================
+function renderTeacherPanel() {
+    const storage = getStorage();
+    const students = storage.students || [];
+    const inviteCode = storage.inviteCode || 'YONSEI3-2024';
+
+    document.getElementById('teacherInviteCodeDisplay').textContent = inviteCode;
+    document.getElementById('teacherInviteCodeDisplay2').textContent = inviteCode;
+    document.getElementById('teacherStudentCount').textContent = students.length;
+    document.getElementById('teacherTotalCards').textContent = allItems.length;
+
+    const totalProgress = students.reduce((sum, s) => sum + (s.progress || 0), 0);
+    const avg = students.length > 0 ? Math.round(totalProgress / students.length) : 0;
+    document.getElementById('teacherAvgProgress').textContent = avg + '%';
+
+    const container = document.getElementById('studentListContainer');
+    if (students.length === 0) {
+        container.innerHTML = '<p style="color:#6b7a8a;grid-column:1/-1;text-align:center;padding:20px 0;">暂无学生数据</p>';
+        return;
+    }
+
+    container.innerHTML = students.map(s => {
+        const mastered = (s.masteredItems || []).length;
+        const total = allItems.length;
+        const pct = Math.min(100, Math.round((mastered / total) * 100));
+        const round = s.currentRound || 1;
+        return `
+        <div class="student-card">
+            <div class="name">${s.name}</div>
+            <div class="info">📅 ${s.lastActive ? new Date(s.lastActive).toLocaleDateString() : '从未活动'}</div>
+            <div class="info">⭐ 收藏 ${(s.favorites || []).length} 个</div>
+            <div class="info">📖 第 ${round} 轮 · 已掌握 ${mastered}/${total}</div>
+            <div class="info">📝 测试 ${(s.testScores || []).length} 次</div>
+            <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+            <span class="badge ${pct > 50 ? 'active' : 'inactive'}">${pct}% 掌握</span>
+        </div>
+    `}).join('');
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+function init() {
+    const user = getCurrentUser();
+    if (user) {
+        const storage = getStorage();
+        const student = storage.students.find(s => s.name === user.name && s.inviteCode === user.inviteCode);
+        if (student) {
+            if (!student.masteredItems) student.masteredItems = [];
+            if (!student.currentRound) student.currentRound = 1;
+            setCurrentUser(student);
+            favorites = student.favorites || [];
+            currentStudent = student;
+            isFavPracticeMode = student.favPracticeMode || false;
+            showStudy();
+            populateFilters();
+            applyFilters();
+            document.getElementById('studyUserName').textContent = student.name + ' 同学';
+            renderFavList();
+            updateStats();
+            return;
+        } else { clearCurrentUser(); }
+    }
+    showAuth();
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('teacherLoginBox').style.display = 'block';
+}
+
+// 绑定事件
+function bindEvents() {
+    document.getElementById('switchToRegister').addEventListener('click', () => {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('registerBox').classList.remove('hidden');
+        document.getElementById('teacherLoginBox').style.display = 'none';
+    });
+    document.getElementById('switchToLogin').addEventListener('click', () => {
+        document.getElementById('loginBox').style.display = 'block';
+        document.getElementById('registerBox').classList.add('hidden');
+        document.getElementById('teacherLoginBox').style.display = 'block';
+    });
+    document.getElementById('switchToStudentLogin').addEventListener('click', () => {
+        document.getElementById('loginBox').style.display = 'block';
+        document.getElementById('registerBox').classList.add('hidden');
+        document.getElementById('teacherLoginBox').style.display = 'block';
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('registerBtn').addEventListener('click', handleRegister);
+    document.getElementById('teacherLoginBtn').addEventListener('click', handleTeacherLogin);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('teacherLogoutBtn').addEventListener('click', handleLogout);
+
+    // 回车登录
+    document.getElementById('loginName').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    document.getElementById('loginInviteCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    document.getElementById('regName').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
+    document.getElementById('regInviteCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
+    document.getElementById('teacherPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTeacherLogin(); });
+
+    // 闪卡操作
+    document.getElementById('flipBtn').addEventListener('click', (e) => { e.stopPropagation(); flipCard(); });
+    document.getElementById('flipBackBtn').addEventListener('click', (e) => { e.stopPropagation(); flipCard(); });
+    document.getElementById('flashcard').addEventListener('click', (e) => {
+        if (e.target.closest('.action-row') || e.target.closest('.speak-btn') || e.target.closest('.audio-only-icon')) return;
+        flipCard();
+    });
+
+    document.getElementById('speakFrontBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentItem) speakKorean(currentItem.korean);
+    });
+    document.getElementById('speakBackBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentItem) speakKorean(currentItem.korean);
+    });
+
+    document.getElementById('favCardBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleFavCard();
+    });
+
+    document.getElementById('masteredBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleMastered();
+    });
+
+    // 导航
+    document.getElementById('prevBtn').addEventListener('click', handlePrev);
+    document.getElementById('nextBtn').addEventListener('click', handleNext);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
+
+    // 筛选
+    document.getElementById('topicFilter').addEventListener('change', () => { if (!isTestMode) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+    document.getElementById('typeFilter').addEventListener('change', () => { if (!isTestMode) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+    document.getElementById('favoriteFilter').addEventListener('change', () => { if (!isTestMode) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+
+    // 轮次管理
+    document.getElementById('advanceRoundBtn').addEventListener('click', handleAdvanceRound);
+
+    // 收藏列表
+    document.getElementById('favToggleBtn').addEventListener('click', () => {
+        const area = document.getElementById('favListArea');
+        area.classList.toggle('show');
+        if (area.classList.contains('show')) renderFavList();
+    });
+    document.getElementById('favPracticeBtn').addEventListener('click', startFavPractice);
+    document.getElementById('clearFavBtn').addEventListener('click', function() {
+        const student = getCurrentUser();
+        if (!student || !confirm('确定要清空所有收藏吗？')) return;
+        const storage = getStorage();
+        const studentData = storage.students.find(s => s.name === student.name && s.inviteCode === student.inviteCode);
+        if (studentData) {
+            studentData.favorites = [];
+            storage.students = storage.students.map(s => s.name === student.name && s.inviteCode === student.inviteCode ? studentData : s);
+            saveStorage(storage);
+            setCurrentUser(studentData);
+            favorites = [];
+            renderFavList();
+            updateStats();
+            if (currentItem) renderCard(currentItem, currentMode, favorites);
+        }
+    });
+
+    // 测试
+    document.getElementById('startTestBtn').addEventListener('click', startTest);
+
+    // 模式切换
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const mode = parseInt(this.dataset.mode);
+            switchMode(mode);
+        });
+    });
+
+    // 教师端
+    document.getElementById('regenerateInviteBtn').addEventListener('click', () => {
+        const storage = getStorage();
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = 'YONSEI3-';
+        for (let i = 0; i < 6; i++) { code += chars[Math.floor(Math.random() * chars.length)]; }
+        storage.inviteCode = code;
+        saveStorage(storage);
+        renderTeacherPanel();
+    });
+
+    document.getElementById('copyInviteBtn').addEventListener('click', () => {
+        const storage = getStorage();
+        navigator.clipboard.writeText(storage.inviteCode).then(() => {
+            document.getElementById('copyInviteBtn').textContent = '✅ 已复制';
+            setTimeout(() => document.getElementById('copyInviteBtn').textContent = '📋 复制', 2000);
+        });
+    });
+}
+
+// 启动
+init();
+bindEvents();
+console.log('✅ 延世3 智能闪卡学习系统 v4 已启动');
+console.log('📊 总卡片:', allItems.length, ' (单词:', wordItems.length, ', 语法:', grammarItems.length, ')');
+</script>
+</body>
+</html>
