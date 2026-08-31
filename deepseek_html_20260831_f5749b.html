@@ -150,6 +150,27 @@
 
         .teacher-password-hint { font-size: 12px; color: #8899aa; margin-top: 4px; text-align: center; }
 
+        /* 教师端词库管理 */
+        .word-manager { margin-top: 20px; border-top: 2px solid #eef2f6; padding-top: 20px; }
+        .word-manager h3 { font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .word-manager .stats { font-size: 12px; color: #6b7a8a; font-weight: 400; }
+        .word-manager .input-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .word-manager .input-row input, .word-manager .input-row textarea, .word-manager .input-row select { flex: 1; min-width: 100px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #dce3ec; font-size: 13px; outline: none; font-family: inherit; background: white; }
+        .word-manager .input-row input:focus, .word-manager .input-row textarea:focus { border-color: #1a2b3c; }
+        .word-manager .input-row .btn { flex-shrink: 0; padding: 8px 16px; }
+        .word-manager .word-list { max-height: 400px; overflow-y: auto; border: 1px solid #e9edf2; border-radius: 12px; padding: 8px; background: #fafcff; }
+        .word-manager .word-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid #f0f2f5; font-size: 13px; gap: 10px; flex-wrap: wrap; }
+        .word-manager .word-item:last-child { border-bottom: none; }
+        .word-manager .word-item .info { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .word-manager .word-item .info .ko { font-weight: 600; color: #1a2b3c; }
+        .word-manager .word-item .info .zh { color: #4d6272; }
+        .word-manager .word-item .info .tag { font-size: 10px; background: #eef2f6; padding: 0 8px; border-radius: 20px; color: #6b7a8a; }
+        .word-manager .word-item .del-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 0 4px; touch-action: manipulation; }
+        .word-manager .batch-import { margin: 10px 0; }
+        .word-manager .batch-import textarea { width: 100%; min-height: 150px; padding: 12px; border-radius: 12px; border: 1.5px solid #dce3ec; font-size: 13px; font-family: 'Consolas', monospace; resize: vertical; outline: none; background: white; }
+        .word-manager .batch-import textarea:focus { border-color: #1a2b3c; }
+        .word-manager .batch-import .format-hint { font-size: 12px; color: #8899aa; margin: 4px 0; }
+
         @media (max-width: 600px) {
             .app-container { padding: 12px; }
             .flashcard-face .main-text { font-size: 22px; }
@@ -161,6 +182,8 @@
             .flashcard-face { padding: 18px 14px; min-height: 260px; }
             .flashcard-container { min-height: 300px; }
             .mode-tab { padding: 4px 10px; font-size: 10px; }
+            .word-manager .input-row { flex-direction: column; }
+            .word-manager .input-row input, .word-manager .input-row textarea { width: 100%; }
         }
     </style>
 </head>
@@ -357,7 +380,46 @@
                 <div style="font-size:24px;font-weight:700;" id="teacherAvgProgress">0%</div>
             </div>
         </div>
-        <h3 style="font-size:15px;color:#1a2b3c;margin-bottom:6px;">📊 学生列表</h3>
+
+        <!-- ===== 词库管理 (教师端新增) ===== -->
+        <div class="word-manager">
+            <h3>
+                📚 词库管理
+                <span class="stats">单词: <span id="managerWordCount">0</span> | 语法: <span id="managerGrammarCount">0</span></span>
+                <button class="btn btn-sm btn-danger" id="clearAllWordsBtn">🗑️ 清空词库</button>
+            </h3>
+            
+            <!-- 批量导入 -->
+            <div class="batch-import">
+                <div class="format-hint">📌 每行一个词条，格式: 韩语 | 中文 | 主题 | 类型(word/grammar) | 例句(可选)</div>
+                <textarea id="batchImportText" placeholder="예:&#10;가능하다 | 可能，行 | 日常 | word | 시간이 가능하면 내일 만나요&#10;-던데요 | 回想亲身经历后说明 | 语法 | grammar | 그 식당 음식이 정말 맛있던데요"></textarea>
+                <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary btn-sm" id="batchImportBtn">📥 批量导入</button>
+                    <button class="btn btn-outline btn-sm" id="loadDefaultBtn">📖 加载默认示例</button>
+                    <span style="font-size:12px;color:#6b7a8a;align-self:center;">当前词库容量: <span id="storageUsage">0</span> / ~5MB</span>
+                </div>
+            </div>
+
+            <!-- 单条添加 -->
+            <div class="input-row" style="margin-top:12px;">
+                <input type="text" id="newKorean" placeholder="韩语 (如: 가능하다)">
+                <input type="text" id="newChinese" placeholder="中文 (如: 可能，行)">
+                <input type="text" id="newTopic" placeholder="主题 (如: 日常)" value="自定义">
+                <select id="newType" style="padding:8px 12px;border-radius:10px;border:1.5px solid #dce3ec;font-size:13px;outline:none;background:white;">
+                    <option value="word">📖 单词</option>
+                    <option value="grammar">🧩 语法</option>
+                </select>
+                <input type="text" id="newExample" placeholder="例句 (可选)" style="flex:2;min-width:150px;">
+                <button class="btn btn-success btn-sm" id="addWordBtn">➕ 添加</button>
+            </div>
+
+            <!-- 词条列表 -->
+            <div class="word-list" id="wordListContainer">
+                <div style="color:#aaa;text-align:center;padding:20px;font-size:14px;">暂无词条，请添加或导入</div>
+            </div>
+        </div>
+
+        <h3 style="font-size:15px;color:#1a2b3c;margin-top:20px;">📊 学生列表</h3>
         <div class="student-list" id="studentListContainer">
             <p style="color:#6b7a8a;grid-column:1/-1;text-align:center;padding:16px 0;">暂无学生数据</p>
         </div>
@@ -366,7 +428,7 @@
 
 <script>
 // ============================================================
-// 语音引擎（简化版，保持功能）
+// 语音引擎（完整保留）
 // ============================================================
 const VoiceEngine = {
     isSpeaking: false,
@@ -393,7 +455,7 @@ const VoiceEngine = {
         if (!synth) return null;
         const voices = synth.getVoices();
         if (!voices || voices.length === 0) return null;
-        const femaleKeywords = ['female', 'girl', 'woman', '여성', '여자', 'Yuna', 'Nara', 'Sora', 'Minji', 'Hana'];
+        const femaleKeywords = ['female', 'girl', 'woman', '여성', '여자', 'Yuna', 'Nara', 'Sora', 'Minji', 'Hana', 'Seoyeon'];
         const scoredVoices = voices.filter(v => v.lang && v.lang.startsWith('ko')).map(v => {
             let score = 0; const name = (v.name || '').toLowerCase();
             for (const kw of femaleKeywords) { if (name.includes(kw.toLowerCase())) { score += 10; break; } }
@@ -455,71 +517,93 @@ document.addEventListener('touchstart', initVoiceOnInteraction);
 const TEACHER_PASSWORD = 'woaibali99';
 
 // ============================================================
-// 存储管理
+// 存储管理 - 核心改为从localStorage读取教师输入的词库
+// ============================================================
+const WORD_BANK_KEY = 'yonsei_wordbank_custom';
+
+function getWordBank() {
+    const data = localStorage.getItem(WORD_BANK_KEY);
+    if (data) {
+        try {
+            const parsed = JSON.parse(data);
+            if (parsed && typeof parsed === 'object') {
+                return { words: parsed.words || [], grammars: parsed.grammars || [] };
+            }
+        } catch(e) {}
+    }
+    // 如果没有数据，返回默认示例
+    return { words: getDefaultWords(), grammars: getDefaultGrammars() };
+}
+
+function saveWordBank(words, grammars) {
+    localStorage.setItem(WORD_BANK_KEY, JSON.stringify({ words: words || [], grammars: grammars || [] }));
+}
+
+function getDefaultWords() {
+    return [
+        { korean: '가능하다', chinese: '可能，行', topic: '日常', type: 'word', example: '시간이 가능하면 내일 만나요.' },
+        { korean: '감상하다', chinese: '欣赏，观赏', topic: '日常', type: 'word', example: '음악을 감상하는 것을 좋아해요.' },
+        { korean: '고민하다', chinese: '苦恼，烦恼', topic: '日常', type: 'word', example: '진로에 대해 고민하고 있어요.' },
+        { korean: '관심', chinese: '关心，兴趣', topic: '日常', type: 'word', example: '한국 문화에 관심이 많아요.' },
+        { korean: '다양하다', chinese: '多样，各种各样', topic: '日常', type: 'word', example: '한국 음식은 다양해요.' },
+        { korean: '등록하다', chinese: '注册，登记', topic: '日常', type: 'word', example: '학원에 등록했어요.' },
+        { korean: '면접', chinese: '面试', topic: '职业', type: 'word', example: '내일 면접이 있어요.' },
+        { korean: '업무', chinese: '业务，工作', topic: '职业', type: 'word', example: '업무를 처리하느라 바빠요.' },
+        { korean: '이력서', chinese: '履历书，简历', topic: '职业', type: 'word', example: '이력서를 제출했어요.' },
+        { korean: '자기소개서', chinese: '自我介绍书', topic: '职业', type: 'word', example: '자기소개서를 작성했어요.' },
+        { korean: '건강식', chinese: '健康饮食', topic: '健康', type: 'word', example: '건강식을 챙겨 먹어요.' },
+        { korean: '규칙적이다', chinese: '有规律的', topic: '健康', type: 'word', example: '규칙적인 생활을 해요.' },
+        { korean: '스트레스', chinese: '压力', topic: '健康', type: 'word', example: '스트레스를 많이 받아요.' },
+        { korean: '식습관', chinese: '饮食习惯', topic: '健康', type: 'word', example: '식습관을 바꿔야 해요.' },
+        { korean: '감동적이다', chinese: '感人的', topic: '文化', type: 'word', example: '영화가 정말 감동적이었어요.' },
+        { korean: '분위기', chinese: '氛围，空气', topic: '文化', type: 'word', example: '카페 분위기가 좋아요.' },
+        { korean: '인기', chinese: '人气，受欢迎', topic: '文化', type: 'word', example: '이 가수는 인기가 많아요.' },
+        { korean: '훌륭하다', chinese: '优秀，杰出', topic: '文化', type: 'word', example: '그는 훌륭한 사람이에요.' },
+        { korean: '존경하다', chinese: '尊敬，敬仰', topic: '人际', type: 'word', example: '저는 부모님을 존경해요.' },
+        { korean: '성공하다', chinese: '成功', topic: '人际', type: 'word', example: '사업에 성공했어요.' },
+        { korean: '실력', chinese: '实力', topic: '人际', type: 'word', example: '한국어 실력이 많이 늘었어요.' },
+        { korean: '오해', chinese: '误会', topic: '人际', type: 'word', example: '오해를 하지 마세요.' },
+        { korean: '사과하다', chinese: '道歉，谢罪', topic: '人际', type: 'word', example: '잘못을 사과했어요.' },
+        { korean: '어색하다', chinese: '尴尬，别扭', topic: '人际', type: 'word', example: '분위기가 어색했어요.' },
+        { korean: '기억하다', chinese: '记住，记忆', topic: '社会', type: 'word', example: '그날을 기억해요.' },
+        { korean: '드디어', chinese: '终于，总算', topic: '社会', type: 'word', example: '드디어 해냈어요!' },
+        { korean: '그립다', chinese: '思念，想念', topic: '社会', type: 'word', example: '고향이 그리워요.' },
+        { korean: '만족하다', chinese: '满足，满意', topic: '社会', type: 'word', example: '결과에 만족해요.' },
+        { korean: '표현하다', chinese: '表达，表现', topic: '社会', type: 'word', example: '감정을 표현하는 것이 중요해요.' },
+        { korean: '향상되다', chinese: '提升，提高', topic: '社会', type: 'word', example: '실력이 향상되었어요.' }
+    ];
+}
+
+function getDefaultGrammars() {
+    return [
+        { korean: '-던데요', chinese: '回想亲身经历后说明', topic: '语法', type: 'grammar', example: '그 식당 음식이 정말 맛있던데요.' },
+        { korean: '-네요', chinese: '对新发现的事实表示感叹', topic: '语法', type: 'grammar', example: '한국어를 정말 잘하시네요.' },
+        { korean: '-는 편이다', chinese: '比较倾向于……', topic: '语法', type: 'grammar', example: '저는 아침에 일찍 일어나는 편이에요.' },
+        { korean: '-자마자', chinese: '一……就……', topic: '语法', type: 'grammar', example: '집에 오자마자 샤워했어요.' },
+        { korean: '-을 뿐만 아니라', chinese: '不仅……而且……', topic: '语法', type: 'grammar', example: '한국어뿐만 아니라 영어도 공부해요.' },
+        { korean: '-는 모양이다', chinese: '看样子……', topic: '语法', type: 'grammar', example: '사람들이 많은 걸 보니 맛있는 모양이에요.' },
+        { korean: '-을 만하다', chinese: '值得……', topic: '语法', type: 'grammar', example: '이 영화는 볼 만해요.' },
+        { korean: '-더라', chinese: '我发现……', topic: '语法', type: 'grammar', example: '제주도에 가 보니까 정말 아름답더라.' },
+        { korean: '-잖아요', chinese: '不是……嘛', topic: '语法', type: 'grammar', example: '오늘 금요일이잖아요.' },
+        { korean: '-도록 하다', chinese: '尽量……', topic: '语法', type: 'grammar', example: '늦지 않도록 하세요.' }
+    ];
+}
+
+// ============================================================
+// 学生数据存储
 // ============================================================
 function getStorage() {
-    const data = localStorage.getItem('yonsei_study_data_v6');
+    const data = localStorage.getItem('yonsei_study_data_v7');
     if (data) { try { return JSON.parse(data); } catch(e) {} }
     return { students: [], inviteCode: 'YONSEI3-2024' };
 }
-function saveStorage(data) { localStorage.setItem('yonsei_study_data_v6', JSON.stringify(data)); }
-function getCurrentUser() { const user = sessionStorage.getItem('yonsei_current_user_v6'); return user ? JSON.parse(user) : null; }
-function setCurrentUser(user) { sessionStorage.setItem('yonsei_current_user_v6', JSON.stringify(user)); }
-function clearCurrentUser() { sessionStorage.removeItem('yonsei_current_user_v6'); }
+function saveStorage(data) { localStorage.setItem('yonsei_study_data_v7', JSON.stringify(data)); }
+function getCurrentUser() { const user = sessionStorage.getItem('yonsei_current_user_v7'); return user ? JSON.parse(user) : null; }
+function setCurrentUser(user) { sessionStorage.setItem('yonsei_current_user_v7', JSON.stringify(user)); }
+function clearCurrentUser() { sessionStorage.removeItem('yonsei_current_user_v7'); }
 
 // ============================================================
-// 完整数据（缩略版，但保留足够功能）
-// ============================================================
-const wordItems = [
-    { korean: '가능하다', chinese: '可能，行', topic: '日常', type: 'word' },
-    { korean: '감상하다', chinese: '欣赏，观赏', topic: '日常', type: 'word' },
-    { korean: '고민하다', chinese: '苦恼，烦恼', topic: '日常', type: 'word' },
-    { korean: '관심', chinese: '关心，兴趣', topic: '日常', type: 'word' },
-    { korean: '다양하다', chinese: '多样，各种各样', topic: '日常', type: 'word' },
-    { korean: '등록하다', chinese: '注册，登记', topic: '日常', type: 'word' },
-    { korean: '면접', chinese: '面试', topic: '职业', type: 'word' },
-    { korean: '업무', chinese: '业务，工作', topic: '职业', type: 'word' },
-    { korean: '이력서', chinese: '履历书，简历', topic: '职业', type: 'word' },
-    { korean: '자기소개서', chinese: '自我介绍书', topic: '职业', type: 'word' },
-    { korean: '건강식', chinese: '健康饮食', topic: '健康', type: 'word' },
-    { korean: '규칙적이다', chinese: '有规律的', topic: '健康', type: 'word' },
-    { korean: '스트레스', chinese: '压力', topic: '健康', type: 'word' },
-    { korean: '식습관', chinese: '饮食习惯', topic: '健康', type: 'word' },
-    { korean: '감동적이다', chinese: '感人的', topic: '文化', type: 'word' },
-    { korean: '분위기', chinese: '氛围，空气', topic: '文化', type: 'word' },
-    { korean: '인기', chinese: '人气，受欢迎', topic: '文化', type: 'word' },
-    { korean: '훌륭하다', chinese: '优秀，杰出', topic: '文化', type: 'word' },
-    { korean: '존경하다', chinese: '尊敬，敬仰', topic: '人际', type: 'word' },
-    { korean: '성공하다', chinese: '成功', topic: '人际', type: 'word' },
-    { korean: '실력', chinese: '实力', topic: '人际', type: 'word' },
-    { korean: '오해', chinese: '误会', topic: '人际', type: 'word' },
-    { korean: '사과하다', chinese: '道歉，谢罪', topic: '人际', type: 'word' },
-    { korean: '어색하다', chinese: '尴尬，别扭', topic: '人际', type: 'word' },
-    { korean: '기억하다', chinese: '记住，记忆', topic: '社会', type: 'word' },
-    { korean: '드디어', chinese: '终于，总算', topic: '社会', type: 'word' },
-    { korean: '그립다', chinese: '思念，想念', topic: '社会', type: 'word' },
-    { korean: '만족하다', chinese: '满足，满意', topic: '社会', type: 'word' },
-    { korean: '표현하다', chinese: '表达，表现', topic: '社会', type: 'word' },
-    { korean: '향상되다', chinese: '提升，提高', topic: '社会', type: 'word' }
-];
-
-const grammarItems = [
-    { korean: '-던데요', chinese: '回想亲身经历后说明', topic: '语法', type: 'grammar' },
-    { korean: '-네요', chinese: '对新发现的事实表示感叹', topic: '语法', type: 'grammar' },
-    { korean: '-는 편이다', chinese: '比较倾向于……', topic: '语法', type: 'grammar' },
-    { korean: '-자마자', chinese: '一……就……', topic: '语法', type: 'grammar' },
-    { korean: '-을 뿐만 아니라', chinese: '不仅……而且……', topic: '语法', type: 'grammar' },
-    { korean: '-는 모양이다', chinese: '看样子……', topic: '语法', type: 'grammar' },
-    { korean: '-을 만하다', chinese: '值得……', topic: '语法', type: 'grammar' },
-    { korean: '-더라', chinese: '我发现……', topic: '语法', type: 'grammar' },
-    { korean: '-잖아요', chinese: '不是……嘛', topic: '语法', type: 'grammar' },
-    { korean: '-도록 하다', chinese: '尽量……', topic: '语法', type: 'grammar' }
-];
-
-const allItems = [...wordItems, ...grammarItems];
-
-// ============================================================
-// 核心状态
+// 核心状态 - 使用从教师端输入的词库
 // ============================================================
 let currentIndex = 0;
 let filteredItems = [];
@@ -536,6 +620,22 @@ let testSubmitted = false;
 let timerInterval = null;
 let seconds = 0;
 
+// 获取当前词库（从教师端输入）
+function getWordItems() {
+    const bank = getWordBank();
+    return bank.words || [];
+}
+
+function getGrammarItems() {
+    const bank = getWordBank();
+    return bank.grammars || [];
+}
+
+function getAllItems() {
+    const bank = getWordBank();
+    return [...(bank.words || []), ...(bank.grammars || [])];
+}
+
 // ============================================================
 // 工具函数
 // ============================================================
@@ -548,8 +648,9 @@ function shuffleArray(arr) {
 }
 
 function getTopics() {
+    const items = getAllItems();
     const set = new Set();
-    wordItems.forEach(item => { if (item.topic) set.add(item.topic); });
+    items.forEach(item => { if (item.topic) set.add(item.topic); });
     return [...set];
 }
 
@@ -576,10 +677,13 @@ function getItemsForMode(mode) {
     const favFilter = document.getElementById('favoriteFilter')?.value || 'all';
 
     let items = [];
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
+    
     if (mode === 3) {
         items = [...grammarItems];
     } else if (mode === 4) {
-        items = [...allItems];
+        items = [...wordItems, ...grammarItems];
     } else {
         items = [...wordItems];
     }
@@ -606,33 +710,11 @@ function getItemsForMode(mode) {
 }
 
 function getExampleForItem(item) {
-    const examples = {
-        '가능하다': { ko: '시간이 가능하면 내일 만나요.', zh: '如果有时间的话，明天见吧。' },
-        '감상하다': { ko: '음악을 감상하는 것을 좋아해요.', zh: '我喜欢欣赏音乐。' },
-        '고민하다': { ko: '진로에 대해 고민하고 있어요.', zh: '我正在为前途苦恼。' },
-        '관심': { ko: '한국 문화에 관심이 많아요.', zh: '我对韩国文化很感兴趣。' },
-        '다양하다': { ko: '한국 음식은 다양해요.', zh: '韩国食物很丰富多样。' },
-        '면접': { ko: '내일 면접이 있어요.', zh: '明天有面试。' },
-        '업무': { ko: '업무를 처리하느라 바빠요.', zh: '我忙着处理业务。' },
-        '스트레스': { ko: '스트레스를 많이 받아요.', zh: '我压力很大。' },
-        '식습관': { ko: '식습관을 바꿔야 해요.', zh: '要改变饮食习惯。' },
-        '감동적이다': { ko: '영화가 정말 감동적이었어요.', zh: '那部电影真的很感人。' },
-        '분위기': { ko: '카페 분위기가 좋아요.', zh: '咖啡厅的氛围很好。' },
-        '훌륭하다': { ko: '그는 훌륭한 사람이에요.', zh: '他是一个优秀的人。' },
-        '존경하다': { ko: '저는 부모님을 존경해요.', zh: '我尊敬父母。' },
-        '성공하다': { ko: '사업에 성공했어요.', zh: '他在事业上成功了。' },
-        '실력': { ko: '한국어 실력이 많이 늘었어요.', zh: '韩语实力提高了很多。' },
-        '오해': { ko: '오해를 하지 마세요.', zh: '请不要误会。' },
-        '어색하다': { ko: '분위기가 어색했어요.', zh: '气氛很尴尬。' },
-        '기억하다': { ko: '그날을 기억해요.', zh: '我记得那天。' },
-        '드디어': { ko: '드디어 해냈어요!', zh: '终于做到了！' },
-        '그립다': { ko: '고향이 그리워요.', zh: '我想念故乡。' },
-        '만족하다': { ko: '결과에 만족해요.', zh: '我对结果很满意。' },
-        '표현하다': { ko: '감정을 표현하는 것이 중요해요.', zh: '表达感情很重要。' }
-    };
-    const key = item.korean.replace(/[()]/g, '').split(' ')[0];
-    if (examples[key]) return examples[key];
-    return { ko: `${item.korean} (예문)`, zh: `${item.chinese} (例句)` };
+    if (item.example) {
+        return { ko: item.example, zh: item.chinese + ' (예문)' };
+    }
+    // 如果没有例句，生成默认
+    return { ko: `${item.korean} (예문)`, zh: `${item.chinese} (예문)` };
 }
 
 // ============================================================
@@ -749,6 +831,8 @@ function flipCard() {
 }
 
 function updateStats() {
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
     document.getElementById('wordCount').textContent = wordItems.length;
     document.getElementById('grammarCount').textContent = grammarItems.length;
     const student = getCurrentUser();
@@ -757,9 +841,9 @@ function updateStats() {
         favorites = favList;
         document.getElementById('favTotalCount').textContent = favList.length;
         document.getElementById('studyFavCount').textContent = '⭐ ' + favList.length;
-        const total = allItems.length;
+        const total = getAllItems().length;
         const mastered = (student.masteredItems || []).length;
-        const pct = Math.min(100, Math.round((mastered / total) * 100));
+        const pct = total > 0 ? Math.min(100, Math.round((mastered / total) * 100)) : 0;
         document.getElementById('masteryDisplay').textContent = pct + '% 掌握';
         document.getElementById('studyUserName').textContent = student.name + ' 同学';
         const round = student.currentRound || 1;
@@ -799,9 +883,9 @@ function handleMastered() {
     if (!student.masteredItems) student.masteredItems = [];
     if (!student.masteredItems.some(m => m.korean === currentItem.korean && m.chinese === currentItem.chinese)) {
         student.masteredItems.push({ korean: currentItem.korean, chinese: currentItem.chinese, type: currentItem.type });
-        const total = allItems.length;
+        const total = getAllItems().length;
         const masteredCount = student.masteredItems.length;
-        student.progress = Math.min(100, Math.round((masteredCount / total) * 100));
+        student.progress = total > 0 ? Math.min(100, Math.round((masteredCount / total) * 100)) : 0;
         const storage = getStorage();
         const idx = storage.students.findIndex(s => s.name === student.name && s.inviteCode === student.inviteCode);
         if (idx >= 0) { storage.students[idx] = student; saveStorage(storage); setCurrentUser(student); }
@@ -855,7 +939,8 @@ function renderFavList() {
         el.addEventListener('click', function() {
             const idx = parseInt(this.dataset.idx);
             const fav = favorites[idx];
-            const found = allItems.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
+            const items = getAllItems();
+            const found = items.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
             if (found >= 0) {
                 document.getElementById('topicFilter').value = 'all';
                 document.getElementById('typeFilter').value = 'all';
@@ -905,7 +990,7 @@ function clearFavorites() {
 function handleAdvanceRound() {
     const student = getCurrentUser();
     if (!student) return;
-    const total = allItems.length;
+    const total = getAllItems().length;
     const masteredCount = (student.masteredItems || []).length;
     if (masteredCount < total) {
         if (!confirm(`还有 ${total - masteredCount} 个卡片未掌握，确定要进入下一轮吗？`)) return;
@@ -941,7 +1026,7 @@ function applyFilters() {
     currentIndex = 0;
     if (filteredItems.length === 0) {
         document.getElementById('frontMain').textContent = '没有匹配的卡片';
-        document.getElementById('frontSub').textContent = '请调整筛选条件';
+        document.getElementById('frontSub').textContent = '请调整筛选条件或添加词条';
         document.getElementById('cardCounter').textContent = '0 / 0';
         document.getElementById('filteredCount').textContent = '0 项';
         return;
@@ -951,9 +1036,11 @@ function applyFilters() {
 }
 
 // ============================================================
-// 测试系统
+// 测试系统 - 使用动态词库
 // ============================================================
 function generateTest() {
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
     const shuffledWords = shuffleArray([...wordItems]);
     const shuffledGrammars = shuffleArray([...grammarItems]);
     const usedWords = new Set();
@@ -1022,6 +1109,11 @@ function generateTest() {
         grammarCount++;
     }
 
+    if (questions.length === 0) {
+        alert('词条数量不足，无法生成测试。请至少添加5个单词和5个语法。');
+        return [];
+    }
+
     return shuffleArray(questions);
 }
 
@@ -1032,6 +1124,10 @@ function startTest() {
     testStarted = true;
     testSubmitted = false;
     testQuestions = generateTest();
+    if (testQuestions.length === 0) {
+        document.getElementById('testContainer').innerHTML = '<p style="text-align:center;color:#6b7a8a;padding:30px 0;">词条数量不足，请添加更多词条</p>';
+        return;
+    }
     testAnswers = testQuestions.map(() => null);
     renderTest();
     document.getElementById('testProgress').textContent = `0 / ${testQuestions.length} 题`;
@@ -1182,7 +1278,6 @@ function showStudy() {
     document.getElementById('teacherPanel').classList.remove('show');
     document.getElementById('teacherPanel').style.display = 'none';
     populateFilters();
-    // 延迟执行，确保DOM完全渲染
     setTimeout(() => {
         switchMode(0);
         renderFavList();
@@ -1197,12 +1292,14 @@ function showTeacher() {
     document.getElementById('teacherPanel').style.display = 'block';
     document.getElementById('teacherPanel').classList.add('show');
     renderTeacherPanel();
+    renderWordManager();
 }
 
 function renderTeacherPanel() {
     const storage = getStorage();
     const students = storage.students || [];
     const inviteCode = storage.inviteCode || 'YONSEI3-2024';
+    const allItems = getAllItems();
     document.getElementById('teacherInviteCodeDisplay').textContent = inviteCode;
     document.getElementById('teacherInviteCodeDisplay2').textContent = inviteCode;
     document.getElementById('teacherStudentCount').textContent = students.length;
@@ -1218,7 +1315,7 @@ function renderTeacherPanel() {
     container.innerHTML = students.map(s => {
         const mastered = (s.masteredItems || []).length;
         const total = allItems.length;
-        const pct = Math.min(100, Math.round((mastered / total) * 100));
+        const pct = total > 0 ? Math.min(100, Math.round((mastered / total) * 100)) : 0;
         return `
         <div class="student-card">
             <div class="name">${s.name}</div>
@@ -1230,6 +1327,201 @@ function renderTeacherPanel() {
     `}).join('');
 }
 
+// ============================================================
+// 词库管理 - 教师端核心功能
+// ============================================================
+function renderWordManager() {
+    const bank = getWordBank();
+    const allItems = [...(bank.words || []), ...(bank.grammars || [])];
+    const container = document.getElementById('wordListContainer');
+    
+    document.getElementById('managerWordCount').textContent = (bank.words || []).length;
+    document.getElementById('managerGrammarCount').textContent = (bank.grammars || []).length;
+    
+    // 显示存储使用量
+    let total = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            total += localStorage[key].length * 2;
+        }
+    }
+    document.getElementById('storageUsage').textContent = (total / 1024 / 1024).toFixed(2) + 'MB';
+
+    if (allItems.length === 0) {
+        container.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;font-size:14px;">暂无词条，请添加或导入</div>';
+        return;
+    }
+
+    container.innerHTML = allItems.map((item, idx) => `
+        <div class="word-item" data-idx="${idx}">
+            <div class="info">
+                <span class="ko">${item.korean}</span>
+                <span class="zh">→ ${item.chinese}</span>
+                <span class="tag">${item.type === 'word' ? '📖 单词' : '🧩 语法'}</span>
+                <span class="tag">${item.topic || '未分类'}</span>
+                ${item.example ? `<span class="tag" style="background:#e8f0fe;">💡 ${item.example}</span>` : ''}
+            </div>
+            <button class="del-btn" data-idx="${idx}" title="删除">✕</button>
+        </div>
+    `).join('');
+
+    // 删除事件
+    document.querySelectorAll('.word-item .del-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx);
+            const all = getAllItems();
+            if (idx >= 0 && idx < all.length) {
+                const item = all[idx];
+                if (confirm(`确定删除 "${item.korean} (${item.chinese})" 吗？`)) {
+                    const bank2 = getWordBank();
+                    const words = bank2.words || [];
+                    const grammars = bank2.grammars || [];
+                    const grammarCount = grammars.length;
+                    if (idx < grammarCount) {
+                        const newGrammars = grammars.filter((_, i) => i !== idx);
+                        saveWordBank(words, newGrammars);
+                    } else {
+                        const wordIdx = idx - grammarCount;
+                        const newWords = words.filter((_, i) => i !== wordIdx);
+                        saveWordBank(newWords, grammars);
+                    }
+                    renderWordManager();
+                    // 刷新学生端
+                    if (document.getElementById('studySection').classList.contains('show')) {
+                        applyFilters();
+                        updateStats();
+                    }
+                }
+            }
+        });
+    });
+}
+
+// 添加单条
+function addSingleItem() {
+    const korean = document.getElementById('newKorean').value.trim();
+    const chinese = document.getElementById('newChinese').value.trim();
+    const topic = document.getElementById('newTopic').value.trim() || '自定义';
+    const type = document.getElementById('newType').value;
+    const example = document.getElementById('newExample').value.trim();
+
+    if (!korean || !chinese) {
+        alert('请填写韩语和中文！');
+        return;
+    }
+
+    const bank = getWordBank();
+    const newItem = { korean, chinese, topic, type, example: example || '' };
+
+    if (type === 'word') {
+        bank.words = bank.words || [];
+        bank.words.push(newItem);
+    } else {
+        bank.grammars = bank.grammars || [];
+        bank.grammars.push(newItem);
+    }
+
+    saveWordBank(bank.words, bank.grammars);
+    renderWordManager();
+
+    // 清空输入
+    document.getElementById('newKorean').value = '';
+    document.getElementById('newChinese').value = '';
+    document.getElementById('newExample').value = '';
+
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+}
+
+// 批量导入
+function batchImport() {
+    const text = document.getElementById('batchImportText').value.trim();
+    if (!text) {
+        alert('请粘贴要导入的词条数据！');
+        return;
+    }
+
+    const lines = text.split('\n').filter(line => line.trim());
+    const bank = getWordBank();
+    bank.words = bank.words || [];
+    bank.grammars = bank.grammars || [];
+    let added = 0;
+
+    lines.forEach(line => {
+        const parts = line.split('|').map(s => s.trim());
+        if (parts.length >= 4) {
+            const [korean, chinese, topic, type, example] = parts;
+            const item = {
+                korean: korean,
+                chinese: chinese,
+                topic: topic || '自定义',
+                type: type === 'grammar' ? 'grammar' : 'word',
+                example: example || ''
+            };
+            if (item.type === 'word') {
+                bank.words.push(item);
+            } else {
+                bank.grammars.push(item);
+            }
+            added++;
+        } else if (parts.length >= 2) {
+            // 简化格式: 韩语 | 中文
+            const [korean, chinese] = parts;
+            const item = {
+                korean: korean,
+                chinese: chinese,
+                topic: '自定义',
+                type: 'word',
+                example: ''
+            };
+            bank.words.push(item);
+            added++;
+        }
+    });
+
+    saveWordBank(bank.words, bank.grammars);
+    renderWordManager();
+    document.getElementById('batchImportText').value = '';
+    alert(`✅ 成功导入 ${added} 个词条！`);
+
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+}
+
+// 加载默认示例
+function loadDefaultData() {
+    if (!confirm('将加载默认示例数据，会覆盖当前词库。确定吗？')) return;
+    const words = getDefaultWords();
+    const grammars = getDefaultGrammars();
+    saveWordBank(words, grammars);
+    renderWordManager();
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+    alert(`✅ 已加载 ${words.length} 个单词和 ${grammars.length} 个语法！`);
+}
+
+// 清空词库
+function clearAllWords() {
+    if (!confirm('⚠️ 确定要清空整个词库吗？此操作不可恢复！')) return;
+    if (!confirm('再次确认：所有单词和语法将被删除！')) return;
+    saveWordBank([], []);
+    renderWordManager();
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+    alert('✅ 词库已清空');
+}
+
+// ============================================================
+// 学生登录/注册
+// ============================================================
 function handleLogin() {
     const code = document.getElementById('loginInviteCode').value.trim();
     const name = document.getElementById('loginName').value.trim();
@@ -1347,6 +1639,12 @@ function switchToTeacherLogin() {
 // 初始化
 // ============================================================
 function init() {
+    // 确保有词库
+    const bank = getWordBank();
+    if ((bank.words || []).length === 0 && (bank.grammars || []).length === 0) {
+        saveWordBank(getDefaultWords(), getDefaultGrammars());
+    }
+
     const user = getCurrentUser();
     if (user) {
         const storage = getStorage();
@@ -1431,6 +1729,13 @@ function bindEvents() {
 
     document.getElementById('startTestBtn').addEventListener('click', startTest);
 
+    // 教师端词库管理
+    document.getElementById('addWordBtn').addEventListener('click', addSingleItem);
+    document.getElementById('batchImportBtn').addEventListener('click', batchImport);
+    document.getElementById('loadDefaultBtn').addEventListener('click', loadDefaultData);
+    document.getElementById('clearAllWordsBtn').addEventListener('click', clearAllWords);
+
+    // 教师端邀请码
     document.getElementById('regenerateInviteBtn').addEventListener('click', () => {
         const storage = getStorage();
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -1450,20 +1755,22 @@ function bindEvents() {
     });
 }
 
-// 使用DOMContentLoaded确保DOM完全加载
+// ============================================================
+// 启动
+// ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     init();
     bindEvents();
-    console.log('✅ 延世3 闪卡学习系统已启动');
+    console.log('✅ 延世3 闪卡学习系统已启动 (教师自定义词库版)');
     console.log('🔑 教师密码:', TEACHER_PASSWORD);
+    const bank = getWordBank();
+    console.log('📊 当前词库: 单词', (bank.words || []).length, '个, 语法', (bank.grammars || []).length, '个');
 });
 
-// 如果DOM已经加载，直接执行
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     init();
     bindEvents();
-    console.log('✅ 延世3 闪卡学习系统已启动');
-    console.log('🔑 教师密码:', TEACHER_PASSWORD);
+    console.log('✅ 延世3 闪卡学习系统已启动 (教师自定义词库版)');
 }
 </script>
 </body>
