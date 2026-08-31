@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>延世韩国语3 - 智能闪卡学习系统</title>
+    <style>
+        /* ===== 样式 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif; }
+        body { background: #f0f4f8; min-height: 100vh; display: flex; justify-content: center; padding: 12px; -webkit-tap-highlight-color: transparent; }
+        .app-container { max-width: 1000px; width: 100%; background: white; border-radius: 32px; padding: 20px 20px 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.08); margin: 4px 0; }
+        .hidden { display: none !important; }
+
+        .voice-status { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(26,43,60,0.92); color: white; padding: 10px 24px; border-radius: 40px; font-size: 14px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 20px rgba(0,0,0,0.3); backdrop-filter: blur(8px); display: none; align-items: center; gap: 10px; max-width: 90%; text-align: center; pointer-events: none; }
+        .voice-status.show { display: flex; }
+        .voice-status .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .auth-box { max-width: 460px; margin: 20px auto; padding: 30px 35px; background: #f8fafc; border-radius: 24px; border: 1px solid #e9edf2; }
+        .auth-box h2 { font-size: 22px; margin-bottom: 6px; color: #1a2b3c; }
+        .auth-box p { color: #6b7a8a; font-size: 14px; margin-bottom: 18px; }
+        .auth-box label { display: block; font-weight: 600; font-size: 13px; color: #2c3e50; margin-top: 12px; margin-bottom: 3px; }
+        .auth-box input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #dce3ec; font-size: 15px; outline: none; transition: 0.2s; background: white; }
+        .auth-box input:focus { border-color: #1a2b3c; box-shadow: 0 0 0 4px rgba(26,43,60,0.06); }
+        .auth-box .btn { width: 100%; margin-top: 16px; padding: 14px; font-size: 16px; }
+        .auth-box .auth-switch { text-align: center; margin-top: 14px; font-size: 14px; color: #6b7a8a; }
+        .auth-box .auth-switch a { color: #1a2b3c; font-weight: 600; cursor: pointer; text-decoration: underline; }
+        .auth-error { color: #c0392b; font-size: 13px; margin-top: 6px; display: none; }
+        .auth-error.show { display: block; }
+        .auth-success { color: #2e7d5e; font-size: 13px; margin-top: 6px; display: none; }
+        .auth-success.show { display: block; }
+
+        .btn { padding: 8px 18px; border-radius: 60px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: all 0.2s; background: #eef2f6; color: #1f2e3f; touch-action: manipulation; }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-primary { background: #1a2b3c; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #0f1e2e; }
+        .btn-outline { background: transparent; border: 2px solid #d0d9e3; }
+        .btn-outline:hover:not(:disabled) { background: #f2f6fc; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover:not(:disabled) { background: #d68910; }
+        .btn-success { background: #2e7d5e; color: white; }
+        .btn-success:hover:not(:disabled) { background: #1f5f45; }
+        .btn-danger { background: #c0392b; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #a93226; }
+        .btn-sm { padding: 4px 12px; font-size: 11px; }
+
+        .speak-btn { background: none; border: none; font-size: 26px; cursor: pointer; transition: 0.15s; padding: 0 6px; touch-action: manipulation; }
+        .speak-btn:hover { transform: scale(1.1); }
+        .speak-btn:active { transform: scale(0.9); }
+
+        .audio-only-icon { font-size: 80px; line-height: 1; animation: pulse 2s ease-in-out infinite; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .audio-only-icon:active { transform: scale(0.92); }
+        .audio-only-icon .sub { font-size: 18px; color: #8899aa; display: block; margin-top: 12px; font-weight: 400; }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        #studySection { display: none; }
+        #studySection.show { display: block; }
+        #teacherPanel { display: none; }
+        #teacherPanel.show { display: block; }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        h1 { font-size: 22px; font-weight: 700; color: #1a2b3c; }
+        .user-info { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #4d6272; flex-wrap: wrap; }
+        .user-info .logout-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .subtitle { color: #6b7a8a; font-size: 13px; border-left: 4px solid #ffb74d; padding-left: 14px; background: #f8fafc; border-radius: 0 12px 12px 0; line-height: 1.5; margin: 4px 0 14px; }
+
+        .stats-bar { display: flex; flex-wrap: wrap; gap: 8px 16px; background: #f7f9fc; padding: 8px 14px; border-radius: 14px; margin-bottom: 16px; font-size: 13px; color: #2c3e50; border: 1px solid #e9edf2; align-items: center; }
+        .stats-bar span { font-weight: 600; color: #1a2b3c; }
+        .stats-bar .fav-count { color: #e67e22; }
+
+        .mode-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; border-bottom: 2px solid #eef2f6; padding-bottom: 10px; }
+        .mode-tab { padding: 6px 14px; border-radius: 40px; background: #f1f4f8; color: #3d4e5f; font-weight: 600; font-size: 12px; border: none; cursor: pointer; transition: all 0.25s; touch-action: manipulation; }
+        .mode-tab.active { background: #1a2b3c; color: white; box-shadow: 0 4px 12px rgba(26,43,60,0.25); }
+
+        .flashcard-container { perspective: 1200px; min-height: 340px; display: flex; justify-content: center; align-items: center; }
+        .flashcard { width: 100%; max-width: 680px; min-height: 300px; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0.0,0.2,1); cursor: pointer; }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard-face { position: absolute; width: 100%; min-height: 300px; backface-visibility: hidden; border-radius: 20px; padding: 24px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 2px solid #e9edf2; background: white; box-shadow: 0 8px 30px rgba(0,0,0,0.04); }
+        .flashcard-back { transform: rotateY(180deg); }
+        .flashcard-face .label { font-size: 11px; font-weight: 600; color: #8899aa; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; }
+        .flashcard-face .main-text { font-size: 28px; font-weight: 700; color: #0f1e2e; line-height: 1.4; word-break: break-word; }
+        .flashcard-face .sub-text { font-size: 15px; color: #4d6272; margin-top: 10px; line-height: 1.6; max-width: 90%; }
+        .flashcard-face .example { margin-top: 12px; padding: 12px 16px; background: #f5f8fc; border-radius: 12px; font-size: 14px; color: #1a2b3c; line-height: 1.6; width: 100%; max-width: 90%; text-align: left; }
+        .flashcard-face .example .ko { font-weight: 600; }
+        .flashcard-face .example .zh { color: #4d6272; font-size: 13px; margin-top: 3px; }
+        .flashcard-face .action-row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+        .flashcard-face .action-row .btn { padding: 6px 16px; font-size: 12px; }
+        .flashcard-counter { text-align: center; font-size: 13px; color: #6b7a8a; margin-top: 12px; }
+
+        .filter-area { margin: 8px 0 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .filter-area select { padding: 5px 12px; border-radius: 40px; border: 1.5px solid #dce3ec; font-size: 12px; background: white; outline: none; }
+        .word-count-badge { background: #dce5ef; padding: 2px 12px; border-radius: 40px; font-size: 12px; font-weight: 600; }
+
+        .progress-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 18px; gap: 10px; }
+        .progress-info { font-size: 13px; color: #5a6e7e; background: #f2f6fc; padding: 4px 14px; border-radius: 40px; }
+        .nav-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
+        .nav-buttons .btn { padding: 5px 14px; font-size: 12px; }
+
+        .favorite-list-area { margin-top: 14px; padding: 10px 14px; background: #fefcf5; border-radius: 14px; border: 1px solid #f0e8d8; display: none; }
+        .favorite-list-area.show { display: block; }
+        .favorite-list-area h4 { font-size: 13px; color: #8a7a5a; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .fav-item { display: inline-block; background: #f5f0e8; padding: 2px 12px; border-radius: 40px; font-size: 12px; margin: 2px 3px 2px 0; color: #3d2e1a; cursor: pointer; transition: 0.15s; touch-action: manipulation; }
+
+        .round-progress { display: flex; align-items: center; gap: 8px; background: #f0f4fa; padding: 4px 14px 4px 10px; border-radius: 40px; font-size: 12px; color: #2c3e50; }
+        .round-progress .round-num { background: #1a2b3c; color: white; padding: 1px 10px; border-radius: 40px; font-weight: 700; font-size: 12px; }
+        .round-progress .status { color: #6b7a8a; font-size: 11px; }
+
+        .test-container { padding: 8px 0; }
+        .test-question { background: #f8fafc; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; border: 1px solid #e9edf2; transition: 0.2s; }
+        .test-question.correct { border-left: 5px solid #2e7d5e; background: #f0faf5; }
+        .test-question.wrong { border-left: 5px solid #c0392b; background: #fdf0ef; }
+        .test-question .q-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; font-size: 12px; color: #6b7a8a; margin-bottom: 4px; }
+        .test-question .q-text { font-size: 16px; font-weight: 600; color: #0f1e2e; margin-bottom: 8px; }
+        .test-question .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .test-question .q-options .opt { padding: 8px 14px; border-radius: 10px; border: 2px solid #dce3ec; background: white; cursor: pointer; transition: 0.15s; font-size: 14px; touch-action: manipulation; }
+        .test-question .q-options .opt:hover:not(.disabled) { border-color: #1a2b3c; background: #f7f9fc; }
+        .test-question .q-options .opt.selected { border-color: #1a2b3c; background: #e8ecf2; }
+        .test-question .q-options .opt.correct-answer { border-color: #2e7d5e; background: #e6f5ed; }
+        .test-question .q-options .opt.wrong-answer { border-color: #c0392b; background: #fdeaea; }
+        .test-question .q-options .opt.disabled { cursor: not-allowed; opacity: 0.7; }
+        .test-question .q-feedback { margin-top: 8px; padding: 8px 12px; border-radius: 10px; font-size: 13px; display: none; line-height: 1.5; }
+        .test-question .q-feedback.show { display: block; }
+        .test-question .q-feedback.correct { background: #e6f5ed; color: #1a5a3e; }
+        .test-question .q-feedback.wrong { background: #fdeaea; color: #8a2a1a; }
+        .test-result { text-align: center; padding: 24px 16px; background: #f8fafc; border-radius: 20px; border: 2px solid #e9edf2; }
+        .test-result .score { font-size: 52px; font-weight: 800; color: #1a2b3c; }
+        .test-result .score-label { font-size: 16px; color: #4d6272; margin-top: 4px; }
+        .test-result .score-detail { font-size: 14px; color: #6b7a8a; margin-top: 8px; }
+        .test-result .btn { margin-top: 12px; }
+        .test-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+        .test-timer { font-size: 14px; font-weight: 600; color: #1a2b3c; background: #f2f6fc; padding: 4px 16px; border-radius: 40px; }
+
+        .flashcard-area-wrap { transition: opacity 0.3s ease; }
+        .flashcard-area-wrap.hidden { display: none; }
+
+        .teacher-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #eef2f6; }
+        .teacher-header h2 { font-size: 18px; color: #1a2b3c; }
+        .student-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+        .student-card { background: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e9edf2; }
+        .student-card .name { font-weight: 700; color: #1a2b3c; }
+        .student-card .info { font-size: 12px; color: #6b7a8a; margin-top: 3px; }
+        .student-card .progress-bar { margin-top: 6px; height: 5px; background: #e9edf2; border-radius: 10px; overflow: hidden; }
+        .student-card .progress-bar .fill { height: 100%; background: #2e7d5e; border-radius: 10px; transition: width 0.5s; }
+        .student-card .badge { display: inline-block; padding: 1px 10px; border-radius: 40px; font-size: 10px; font-weight: 600; margin-top: 3px; }
+        .badge.active { background: #e6f5ed; color: #2e7d5e; }
+        .badge.inactive { background: #fdeaea; color: #c0392b; }
+        .invite-box { background: #f8fafc; border-radius: 14px; padding: 12px 16px; border: 1px dashed #c5ced9; margin: 10px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .invite-box code { background: #e9edf2; padding: 4px 14px; border-radius: 40px; font-size: 16px; font-weight: 700; letter-spacing: 2px; color: #1a2b3c; }
+
+        .teacher-password-hint { font-size: 12px; color: #8899aa; margin-top: 4px; text-align: center; }
+
+        /* 教师端词库管理 */
+        .word-manager { margin-top: 20px; border-top: 2px solid #eef2f6; padding-top: 20px; }
+        .word-manager h3 { font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .word-manager .stats { font-size: 12px; color: #6b7a8a; font-weight: 400; }
+        .word-manager .input-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .word-manager .input-row input, .word-manager .input-row textarea, .word-manager .input-row select { flex: 1; min-width: 100px; padding: 8px 12px; border-radius: 10px; border: 1.5px solid #dce3ec; font-size: 15px; outline: none; font-family: 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif; background: white; }
+        .word-manager .input-row input:focus, .word-manager .input-row textarea:focus { border-color: #1a2b3c; }
+        .word-manager .input-row .btn { flex-shrink: 0; padding: 8px 16px; }
+        .word-manager .word-list { max-height: 400px; overflow-y: auto; border: 1px solid #e9edf2; border-radius: 12px; padding: 8px; background: #fafcff; }
+        .word-manager .word-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; border-bottom: 1px solid #f0f2f5; font-size: 13px; gap: 10px; flex-wrap: wrap; }
+        .word-manager .word-item:last-child { border-bottom: none; }
+        .word-manager .word-item .info { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .word-manager .word-item .info .ko { font-weight: 600; color: #1a2b3c; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif; }
+        .word-manager .word-item .info .zh { color: #4d6272; }
+        .word-manager .word-item .info .tag { font-size: 10px; background: #eef2f6; padding: 0 8px; border-radius: 20px; color: #6b7a8a; }
+        .word-manager .word-item .del-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 16px; padding: 0 4px; touch-action: manipulation; }
+        .word-manager .batch-import { margin: 10px 0; }
+        .word-manager .batch-import textarea { width: 100%; min-height: 150px; padding: 12px; border-radius: 12px; border: 1.5px solid #dce3ec; font-size: 15px; font-family: 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Consolas', monospace; resize: vertical; outline: none; background: white; }
+        .word-manager .batch-import textarea:focus { border-color: #1a2b3c; }
+        .word-manager .batch-import .format-hint { font-size: 12px; color: #8899aa; margin: 4px 0; }
+
+        /* 修复手机端韩文输入乱码 - 关键样式 */
+        input, textarea, select, .word-manager .input-row input, .word-manager .input-row textarea {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-variant-ligatures: none;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* 韩文输入框特殊处理 */
+        .auth-box input[type="text"], 
+        .auth-box input[type="password"],
+        #loginName, #regName,
+        #loginInviteCode, #regInviteCode,
+        #newKorean, #newChinese, #newTopic, #newExample,
+        #batchImportText {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', sans-serif !important;
+            font-size: 16px !important; /* 防止iOS自动缩放 */
+        }
+
+        /* 闪卡韩文显示 */
+        .flashcard-face .main-text,
+        .word-manager .word-item .info .ko,
+        .test-question .q-text {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', 'Segoe UI', sans-serif !important;
+            word-break: keep-all;
+        }
+
+        @media (max-width: 600px) {
+            .app-container { padding: 12px; }
+            .flashcard-face .main-text { font-size: 22px; }
+            .auth-box { padding: 16px; margin: 10px auto; }
+            .student-list { grid-template-columns: 1fr; }
+            .test-question .q-options { grid-template-columns: 1fr; }
+            .test-result .score { font-size: 38px; }
+            .audio-only-icon { font-size: 56px; }
+            .flashcard-face { padding: 18px 14px; min-height: 260px; }
+            .flashcard-container { min-height: 300px; }
+            .mode-tab { padding: 4px 10px; font-size: 10px; }
+            .word-manager .input-row { flex-direction: column; }
+            .word-manager .input-row input, .word-manager .input-row textarea { width: 100%; font-size: 16px !important; }
+            .auth-box input { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container" id="app">
+
+    <!-- ===== 语音状态提示 ===== -->
+    <div class="voice-status" id="voiceStatus">
+        <span class="spinner"></span>
+        <span id="voiceStatusText">🔊 正在播放语音...</span>
+    </div>
+
+    <!-- ===== 认证界面 ===== -->
+    <div id="authSection">
+        <div style="text-align:center; margin-bottom:8px;">
+            <h1 style="font-size:26px;">📘 延世韩国语3</h1>
+            <p style="color:#6b7a8a; font-size:14px;">智能闪卡学习 + 多轮复习系统</p>
+        </div>
+
+        <div class="auth-box" id="loginBox">
+            <h2>👋 登录学习</h2>
+            <p>输入邀请码和姓名进入学习端</p>
+            <label>邀请码</label>
+            <input type="text" id="loginInviteCode" placeholder="请输入教师提供的邀请码" value="YONSEI3-2024">
+            <label>你的姓名</label>
+            <input type="text" id="loginName" placeholder="请输入你的姓名">
+            <div class="auth-error" id="loginError"></div>
+            <button class="btn btn-primary" id="loginBtn">进入学习</button>
+            <div class="auth-switch">还没有账号？<a id="switchToRegister">注册新账号</a></div>
+            <div class="auth-switch" style="margin-top:8px; border-top:1px solid #e9edf2; padding-top:12px;">
+                <a id="switchToTeacherLogin" style="color:#c0392b;">👨‍🏫 教师管理入口</a>
+            </div>
+        </div>
+
+        <div class="auth-box hidden" id="registerBox">
+            <h2>📝 注册新账号</h2>
+            <p>输入邀请码和你的信息完成注册</p>
+            <label>邀请码</label>
+            <input type="text" id="regInviteCode" placeholder="请输入教师提供的邀请码" value="YONSEI3-2024">
+            <label>你的姓名</label>
+            <input type="text" id="regName" placeholder="请输入你的姓名">
+            <label>设置密码（可选）</label>
+            <input type="password" id="regPassword" placeholder="留空则使用默认密码">
+            <div class="auth-error" id="regError"></div>
+            <div class="auth-success" id="regSuccess"></div>
+            <button class="btn btn-primary" id="registerBtn">注册并进入学习</button>
+            <div class="auth-switch">已有账号？<a id="switchToLogin">返回登录</a></div>
+        </div>
+
+        <div class="auth-box hidden" id="teacherLoginBox">
+            <h2>👨‍🏫 教师管理端</h2>
+            <p style="color:#6b7a8a; font-size:13px;">请输入教师专属密码进入管理面板</p>
+            <label>教师密码</label>
+            <input type="password" id="teacherPassword" placeholder="请输入教师密码">
+            <div class="auth-error" id="teacherError"></div>
+            <button class="btn btn-primary" id="teacherLoginBtn">进入教师端</button>
+            <div class="auth-switch"><a id="switchToStudentLogin">← 返回学生登录</a></div>
+            <div class="teacher-password-hint">🔒 仅限教师本人使用</div>
+        </div>
+    </div>
+
+    <!-- ===== 学习端 ===== -->
+    <div id="studySection">
+        <div class="header-row">
+            <h1>📘 延世韩国语3</h1>
+            <div class="user-info">
+                <span id="studyUserName">学生</span>
+                <span class="round-progress">
+                    <span class="round-num" id="currentRoundDisplay">第1轮</span>
+                    <span class="status" id="roundStatus">📖 学习新词</span>
+                </span>
+                <span class="word-count-badge" id="studyFavCount">⭐ 0</span>
+                <button class="logout-btn" id="logoutBtn">退出</button>
+            </div>
+        </div>
+        <div class="subtitle">智能多轮复习 · 每轮独立打乱 · 直到完全掌握</div>
+
+        <div class="stats-bar">
+            <div>📚 总单词 <span id="wordCount">0</span></div>
+            <div>🧩 总语法 <span id="grammarCount">0</span></div>
+            <div>⭐ 收藏 <span class="fav-count" id="favTotalCount">0</span></div>
+            <div>📌 <span id="currentModeLabel">韩语→中文</span></div>
+            <div>🎯 <span id="masteryDisplay">0% 掌握</span></div>
+        </div>
+
+        <div class="mode-tabs" id="modeTabs">
+            <button class="mode-tab active" data-mode="0">🇰🇷→🇨🇳 韩语闪卡</button>
+            <button class="mode-tab" data-mode="1">🇨🇳→🇰🇷 中文闪卡</button>
+            <button class="mode-tab" data-mode="2">🔊 语音闪卡</button>
+            <button class="mode-tab" data-mode="3">🧩 语法闪卡</button>
+            <button class="mode-tab" data-mode="4">📝 综合测试</button>
+        </div>
+
+        <div class="filter-area" id="filterArea">
+            <select id="topicFilter"><option value="all">📂 全部主题</option></select>
+            <select id="typeFilter"><option value="all">📖 全部类型</option><option value="word">单词</option><option value="grammar">语法</option></select>
+            <select id="favoriteFilter"><option value="all">全部</option><option value="fav">⭐ 仅收藏</option></select>
+            <span class="word-count-badge" id="filteredCount">0 项</span>
+            <button class="btn btn-sm btn-outline" id="advanceRoundBtn">⏩ 下一轮</button>
+        </div>
+
+        <!-- 闪卡区域 -->
+        <div class="flashcard-area-wrap" id="flashcardArea">
+            <div class="flashcard-container">
+                <div class="flashcard" id="flashcard">
+                    <div class="flashcard-face" id="cardFront">
+                        <div class="label" id="frontLabel">📖 单词</div>
+                        <div class="main-text" id="frontMain">준비 중...</div>
+                        <div class="sub-text" id="frontSub"></div>
+                        <div class="action-row">
+                            <button class="speak-btn" id="speakFrontBtn" aria-label="播放语音">🔊</button>
+                            <button class="btn btn-outline" id="flipBtn">🔄 翻转</button>
+                        </div>
+                    </div>
+                    <div class="flashcard-face flashcard-back" id="cardBack">
+                        <div class="label" id="backLabel">📖 单词 · 背面</div>
+                        <div class="main-text" id="backMain">뒤집기</div>
+                        <div class="sub-text" id="backSub"></div>
+                        <div class="example" id="backExample" style="display:none;">
+                            <div class="ko" id="exampleKo"></div>
+                            <div class="zh" id="exampleZh"></div>
+                        </div>
+                        <div class="action-row">
+                            <button class="speak-btn" id="speakBackBtn" aria-label="播放语音">🔊</button>
+                            <button class="btn btn-warning" id="favCardBtn">⭐ 收藏</button>
+                            <button class="btn btn-success" id="masteredBtn">✅ 已掌握</button>
+                            <button class="btn btn-outline" id="flipBackBtn">🔄 翻转</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flashcard-counter" id="cardCounter">1 / 10</div>
+        </div>
+
+        <!-- 测试区域 -->
+        <div class="flashcard-area-wrap hidden" id="testArea">
+            <div class="test-controls">
+                <button class="btn btn-primary" id="startTestBtn">📝 开始新测试</button>
+                <span class="test-timer" id="testTimer">⏱️ 00:00</span>
+                <span class="word-count-badge" id="testProgress">0 / 0 题</span>
+            </div>
+            <div id="testContainer" class="test-container"></div>
+        </div>
+
+        <div class="favorite-list-area" id="favListArea">
+            <h4>
+                <span>⭐ 收藏列表 <span id="favListCount">0</span></span>
+                <span>
+                    <button class="btn btn-sm btn-outline" id="favPracticeBtn">📖 收藏专项练习</button>
+                    <button class="btn btn-sm btn-outline" id="clearFavBtn">清空</button>
+                </span>
+            </h4>
+            <div id="favListContainer"></div>
+        </div>
+
+        <div class="progress-controls" id="progressControls">
+            <div class="progress-info"><span id="progressText">0 / 0</span></div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" id="prevBtn">◀ 上一张</button>
+                <button class="btn btn-outline" id="nextBtn">下一张 ▶</button>
+                <button class="btn btn-outline" id="resetBtn">🔄 重来</button>
+                <button class="btn btn-outline" id="favToggleBtn">⭐ 收藏列表</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 教师端 ===== -->
+    <div id="teacherPanel">
+        <div class="teacher-header">
+            <h2>👨‍🏫 教师管理面板</h2>
+            <div>
+                <span style="font-size:13px;color:#6b7a8a;">邀请码: </span>
+                <code style="background:#e9edf2;padding:4px 14px;border-radius:40px;font-weight:700;" id="teacherInviteCodeDisplay">------</code>
+                <button class="btn btn-sm btn-outline" id="regenerateInviteBtn" style="margin-left:6px;">🔄 生成新码</button>
+                <button class="btn btn-sm btn-danger" id="teacherLogoutBtn" style="margin-left:10px;">退出</button>
+            </div>
+        </div>
+        <div class="invite-box">
+            <span style="font-weight:600;">📋 当前邀请码:</span>
+            <code id="teacherInviteCodeDisplay2">------</code>
+            <button class="btn btn-sm btn-outline" id="copyInviteBtn">📋 复制</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+            <div style="background:#f8fafc;padding:12px 20px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:12px;color:#6b7a8a;">总学生数</div>
+                <div style="font-size:24px;font-weight:700;" id="teacherStudentCount">0</div>
+            </div>
+            <div style="background:#f8fafc;padding:12px 20px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:12px;color:#6b7a8a;">总学习卡片</div>
+                <div style="font-size:24px;font-weight:700;" id="teacherTotalCards">0</div>
+            </div>
+            <div style="background:#f8fafc;padding:12px 20px;border-radius:14px;border:1px solid #e9edf2;">
+                <div style="font-size:12px;color:#6b7a8a;">平均进度</div>
+                <div style="font-size:24px;font-weight:700;" id="teacherAvgProgress">0%</div>
+            </div>
+        </div>
+
+        <!-- ===== 词库管理 (教师端新增) ===== -->
+        <div class="word-manager">
+            <h3>
+                📚 词库管理
+                <span class="stats">单词: <span id="managerWordCount">0</span> | 语法: <span id="managerGrammarCount">0</span></span>
+                <button class="btn btn-sm btn-danger" id="clearAllWordsBtn">🗑️ 清空词库</button>
+            </h3>
+            
+            <!-- 批量导入 -->
+            <div class="batch-import">
+                <div class="format-hint">📌 每行一个词条，格式: 韩语 | 中文 | 主题 | 类型(word/grammar) | 例句(可选)</div>
+                <textarea id="batchImportText" placeholder="예:&#10;가능하다 | 可能，行 | 日常 | word | 시간이 가능하면 내일 만나요&#10;-던데요 | 回想亲身经历后说明 | 语法 | grammar | 그 식당 음식이 정말 맛있던데요"></textarea>
+                <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary btn-sm" id="batchImportBtn">📥 批量导入</button>
+                    <button class="btn btn-outline btn-sm" id="loadDefaultBtn">📖 加载默认示例</button>
+                    <span style="font-size:12px;color:#6b7a8a;align-self:center;">当前词库容量: <span id="storageUsage">0</span> / ~5MB</span>
+                </div>
+            </div>
+
+            <!-- 单条添加 -->
+            <div class="input-row" style="margin-top:12px;">
+                <input type="text" id="newKorean" placeholder="韩语 (如: 가능하다)">
+                <input type="text" id="newChinese" placeholder="中文 (如: 可能，行)">
+                <input type="text" id="newTopic" placeholder="主题 (如: 日常)" value="自定义">
+                <select id="newType" style="padding:8px 12px;border-radius:10px;border:1.5px solid #dce3ec;font-size:15px;outline:none;background:white;font-family:'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;">
+                    <option value="word">📖 单词</option>
+                    <option value="grammar">🧩 语法</option>
+                </select>
+                <input type="text" id="newExample" placeholder="例句 (可选)" style="flex:2;min-width:150px;">
+                <button class="btn btn-success btn-sm" id="addWordBtn">➕ 添加</button>
+            </div>
+
+            <!-- 词条列表 -->
+            <div class="word-list" id="wordListContainer">
+                <div style="color:#aaa;text-align:center;padding:20px;font-size:14px;">暂无词条，请添加或导入</div>
+            </div>
+        </div>
+
+        <h3 style="font-size:15px;color:#1a2b3c;margin-top:20px;">📊 学生列表</h3>
+        <div class="student-list" id="studentListContainer">
+            <p style="color:#6b7a8a;grid-column:1/-1;text-align:center;padding:16px 0;">暂无学生数据</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 语音引擎（完整保留）
+// ============================================================
+const VoiceEngine = {
+    isSpeaking: false,
+    currentUtterance: null,
+    statusElement: document.getElementById('voiceStatus'),
+    statusText: document.getElementById('voiceStatusText'),
+    statusTimer: null,
+    preferredVoice: null,
+    voiceLoaded: false,
+
+    isSupported() { return 'speechSynthesis' in window || 'webkitSpeechSynthesis' in window; },
+    getSynth() { return window.speechSynthesis || window.webkitSpeechSynthesis || null; },
+
+    showStatus(text, show) {
+        const el = this.statusElement;
+        const txt = this.statusText;
+        if (show) { txt.textContent = text || '🔊 正在播放语音...'; el.classList.add('show'); clearTimeout(this.statusTimer); }
+        else { el.classList.remove('show'); }
+    },
+    hideStatusAfter(delay) { clearTimeout(this.statusTimer); this.statusTimer = setTimeout(() => { this.showStatus('', false); }, delay || 500); },
+
+    getBestKoreanVoice() {
+        const synth = this.getSynth();
+        if (!synth) return null;
+        const voices = synth.getVoices();
+        if (!voices || voices.length === 0) return null;
+        const femaleKeywords = ['female', 'girl', 'woman', '여성', '여자', 'Yuna', 'Nara', 'Sora', 'Minji', 'Hana', 'Seoyeon'];
+        const scoredVoices = voices.filter(v => v.lang && v.lang.startsWith('ko')).map(v => {
+            let score = 0; const name = (v.name || '').toLowerCase();
+            for (const kw of femaleKeywords) { if (name.includes(kw.toLowerCase())) { score += 10; break; } }
+            if (name.includes('google') || name.includes('apple') || name.includes('microsoft')) score += 4;
+            if (v.localService) score += 2;
+            return { voice: v, score: score };
+        }).sort((a,b) => b.score - a.score);
+        if (scoredVoices.length > 0) return scoredVoices[0].voice;
+        return voices.find(v => v.lang && v.lang.startsWith('ko')) || null;
+    },
+
+    loadBestVoice() {
+        const synth = this.getSynth();
+        if (!synth) return;
+        if (this.voiceLoaded) { this.preferredVoice = this.getBestKoreanVoice(); return; }
+        this.preferredVoice = this.getBestKoreanVoice();
+        if (this.preferredVoice) { this.voiceLoaded = true; return; }
+        if (synth.getVoices().length === 0) {
+            synth.onvoiceschanged = () => { this.preferredVoice = this.getBestKoreanVoice(); this.voiceLoaded = true; };
+        } else { setTimeout(() => { this.preferredVoice = this.getBestKoreanVoice(); this.voiceLoaded = true; }, 200); }
+    },
+
+    speak(text, options = {}) {
+        return new Promise((resolve) => {
+            if (!text || text.trim() === '') { resolve(); return; }
+            const synth = this.getSynth();
+            if (!synth) { resolve(); return; }
+            this.cancel();
+            try {
+                let utterance = new (window.SpeechSynthesisUtterance || window.webkitSpeechSynthesisUtterance)(text);
+                utterance.lang = options.lang || 'ko-KR';
+                if (this.preferredVoice) utterance.voice = this.preferredVoice;
+                else { this.preferredVoice = this.getBestKoreanVoice(); if (this.preferredVoice) utterance.voice = this.preferredVoice; }
+                utterance.rate = options.rate || 0.85;
+                utterance.pitch = options.pitch || 1.05;
+                utterance.volume = options.volume || 1;
+                utterance.onstart = () => { this.isSpeaking = true; this.showStatus('🔊 正在播放...', true); };
+                utterance.onend = () => { this.isSpeaking = false; this.showStatus('✅ 播放完成', true); this.hideStatusAfter(600); resolve(); };
+                utterance.onerror = () => { this.isSpeaking = false; resolve(); };
+                this.currentUtterance = utterance;
+                synth.speak(utterance);
+                setTimeout(() => { if (this.isSpeaking) { this.isSpeaking = false; resolve(); } }, 10000);
+            } catch(e) { resolve(); }
+        });
+    },
+    cancel() { const synth = this.getSynth(); if (synth) { try { synth.cancel(); } catch(e) {} } this.isSpeaking = false; this.currentUtterance = null; this.showStatus('', false); },
+    preload() { const synth = this.getSynth(); if (!synth) return; this.loadBestVoice(); try { const dummy = new (SpeechSynthesisUtterance || webkitSpeechSynthesisUtterance)(' '); dummy.lang = 'ko-KR'; dummy.volume = 0; if (this.preferredVoice) dummy.voice = this.preferredVoice; synth.speak(dummy); setTimeout(() => { try { synth.cancel(); } catch(e) {} }, 150); } catch(e) {} }
+};
+
+function speakKorean(text) { if (!text) return; VoiceEngine.speak(text).catch(() => {}); }
+
+function initVoiceOnInteraction() { VoiceEngine.preload(); document.removeEventListener('click', initVoiceOnInteraction); document.removeEventListener('touchstart', initVoiceOnInteraction); }
+document.addEventListener('click', initVoiceOnInteraction);
+document.addEventListener('touchstart', initVoiceOnInteraction);
+
+// ============================================================
+// 教师专属密码
+// ============================================================
+const TEACHER_PASSWORD = 'woaibali99';
+
+// ============================================================
+// 存储管理 - 核心改为从localStorage读取教师输入的词库
+// ============================================================
+const WORD_BANK_KEY = 'yonsei_wordbank_custom';
+
+function getWordBank() {
+    const data = localStorage.getItem(WORD_BANK_KEY);
+    if (data) {
+        try {
+            const parsed = JSON.parse(data);
+            if (parsed && typeof parsed === 'object') {
+                return { words: parsed.words || [], grammars: parsed.grammars || [] };
+            }
+        } catch(e) {}
+    }
+    // 如果没有数据，返回默认示例
+    return { words: getDefaultWords(), grammars: getDefaultGrammars() };
+}
+
+function saveWordBank(words, grammars) {
+    localStorage.setItem(WORD_BANK_KEY, JSON.stringify({ words: words || [], grammars: grammars || [] }));
+}
+
+function getDefaultWords() {
+    return [
+        { korean: '가능하다', chinese: '可能，行', topic: '日常', type: 'word', example: '시간이 가능하면 내일 만나요.' },
+        { korean: '감상하다', chinese: '欣赏，观赏', topic: '日常', type: 'word', example: '음악을 감상하는 것을 좋아해요.' },
+        { korean: '고민하다', chinese: '苦恼，烦恼', topic: '日常', type: 'word', example: '진로에 대해 고민하고 있어요.' },
+        { korean: '관심', chinese: '关心，兴趣', topic: '日常', type: 'word', example: '한국 문화에 관심이 많아요.' },
+        { korean: '다양하다', chinese: '多样，各种各样', topic: '日常', type: 'word', example: '한국 음식은 다양해요.' },
+        { korean: '등록하다', chinese: '注册，登记', topic: '日常', type: 'word', example: '학원에 등록했어요.' },
+        { korean: '면접', chinese: '面试', topic: '职业', type: 'word', example: '내일 면접이 있어요.' },
+        { korean: '업무', chinese: '业务，工作', topic: '职业', type: 'word', example: '업무를 처리하느라 바빠요.' },
+        { korean: '이력서', chinese: '履历书，简历', topic: '职业', type: 'word', example: '이력서를 제출했어요.' },
+        { korean: '자기소개서', chinese: '自我介绍书', topic: '职业', type: 'word', example: '자기소개서를 작성했어요.' },
+        { korean: '건강식', chinese: '健康饮食', topic: '健康', type: 'word', example: '건강식을 챙겨 먹어요.' },
+        { korean: '규칙적이다', chinese: '有规律的', topic: '健康', type: 'word', example: '규칙적인 생활을 해요.' },
+        { korean: '스트레스', chinese: '压力', topic: '健康', type: 'word', example: '스트레스를 많이 받아요.' },
+        { korean: '식습관', chinese: '饮食习惯', topic: '健康', type: 'word', example: '식습관을 바꿔야 해요.' },
+        { korean: '감동적이다', chinese: '感人的', topic: '文化', type: 'word', example: '영화가 정말 감동적이었어요.' },
+        { korean: '분위기', chinese: '氛围，空气', topic: '文化', type: 'word', example: '카페 분위기가 좋아요.' },
+        { korean: '인기', chinese: '人气，受欢迎', topic: '文化', type: 'word', example: '이 가수는 인기가 많아요.' },
+        { korean: '훌륭하다', chinese: '优秀，杰出', topic: '文化', type: 'word', example: '그는 훌륭한 사람이에요.' },
+        { korean: '존경하다', chinese: '尊敬，敬仰', topic: '人际', type: 'word', example: '저는 부모님을 존경해요.' },
+        { korean: '성공하다', chinese: '成功', topic: '人际', type: 'word', example: '사업에 성공했어요.' },
+        { korean: '실력', chinese: '实力', topic: '人际', type: 'word', example: '한국어 실력이 많이 늘었어요.' },
+        { korean: '오해', chinese: '误会', topic: '人际', type: 'word', example: '오해를 하지 마세요.' },
+        { korean: '사과하다', chinese: '道歉，谢罪', topic: '人际', type: 'word', example: '잘못을 사과했어요.' },
+        { korean: '어색하다', chinese: '尴尬，别扭', topic: '人际', type: 'word', example: '분위기가 어색했어요.' },
+        { korean: '기억하다', chinese: '记住，记忆', topic: '社会', type: 'word', example: '그날을 기억해요.' },
+        { korean: '드디어', chinese: '终于，总算', topic: '社会', type: 'word', example: '드디어 해냈어요!' },
+        { korean: '그립다', chinese: '思念，想念', topic: '社会', type: 'word', example: '고향이 그리워요.' },
+        { korean: '만족하다', chinese: '满足，满意', topic: '社会', type: 'word', example: '결과에 만족해요.' },
+        { korean: '표현하다', chinese: '表达，表现', topic: '社会', type: 'word', example: '감정을 표현하는 것이 중요해요.' },
+        { korean: '향상되다', chinese: '提升，提高', topic: '社会', type: 'word', example: '실력이 향상되었어요.' }
+    ];
+}
+
+function getDefaultGrammars() {
+    return [
+        { korean: '-던데요', chinese: '回想亲身经历后说明', topic: '语法', type: 'grammar', example: '그 식당 음식이 정말 맛있던데요.' },
+        { korean: '-네요', chinese: '对新发现的事实表示感叹', topic: '语法', type: 'grammar', example: '한국어를 정말 잘하시네요.' },
+        { korean: '-는 편이다', chinese: '比较倾向于……', topic: '语法', type: 'grammar', example: '저는 아침에 일찍 일어나는 편이에요.' },
+        { korean: '-자마자', chinese: '一……就……', topic: '语法', type: 'grammar', example: '집에 오자마자 샤워했어요.' },
+        { korean: '-을 뿐만 아니라', chinese: '不仅……而且……', topic: '语法', type: 'grammar', example: '한국어뿐만 아니라 영어도 공부해요.' },
+        { korean: '-는 모양이다', chinese: '看样子……', topic: '语法', type: 'grammar', example: '사람들이 많은 걸 보니 맛있는 모양이에요.' },
+        { korean: '-을 만하다', chinese: '值得……', topic: '语法', type: 'grammar', example: '이 영화는 볼 만해요.' },
+        { korean: '-더라', chinese: '我发现……', topic: '语法', type: 'grammar', example: '제주도에 가 보니까 정말 아름답더라.' },
+        { korean: '-잖아요', chinese: '不是……嘛', topic: '语法', type: 'grammar', example: '오늘 금요일이잖아요.' },
+        { korean: '-도록 하다', chinese: '尽量……', topic: '语法', type: 'grammar', example: '늦지 않도록 하세요.' }
+    ];
+}
+
+// ============================================================
+// 学生数据存储
+// ============================================================
+function getStorage() {
+    const data = localStorage.getItem('yonsei_study_data_v7');
+    if (data) { try { return JSON.parse(data); } catch(e) {} }
+    return { students: [], inviteCode: 'YONSEI3-2024' };
+}
+function saveStorage(data) { localStorage.setItem('yonsei_study_data_v7', JSON.stringify(data)); }
+function getCurrentUser() { const user = sessionStorage.getItem('yonsei_current_user_v7'); return user ? JSON.parse(user) : null; }
+function setCurrentUser(user) { sessionStorage.setItem('yonsei_current_user_v7', JSON.stringify(user)); }
+function clearCurrentUser() { sessionStorage.removeItem('yonsei_current_user_v7'); }
+
+// ============================================================
+// 核心状态 - 使用从教师端输入的词库
+// ============================================================
+let currentIndex = 0;
+let filteredItems = [];
+let currentItem = null;
+let isFlipped = false;
+let favorites = [];
+let isFavPracticeMode = false;
+let currentStudent = null;
+let currentMode = 0;
+let testQuestions = [];
+let testAnswers = [];
+let testStarted = false;
+let testSubmitted = false;
+let timerInterval = null;
+let seconds = 0;
+
+// 获取当前词库（从教师端输入）
+function getWordItems() {
+    const bank = getWordBank();
+    return bank.words || [];
+}
+
+function getGrammarItems() {
+    const bank = getWordBank();
+    return bank.grammars || [];
+}
+
+function getAllItems() {
+    const bank = getWordBank();
+    return [...(bank.words || []), ...(bank.grammars || [])];
+}
+
+// ============================================================
+// 工具函数
+// ============================================================
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getTopics() {
+    const items = getAllItems();
+    const set = new Set();
+    items.forEach(item => { if (item.topic) set.add(item.topic); });
+    return [...set];
+}
+
+function isFavorite(item, favList) {
+    if (!item) return false;
+    return favList.some(f => f.korean === item.korean && f.chinese === item.chinese);
+}
+
+function toggleFavoriteItem(item, favList) {
+    if (!item) return favList;
+    const idx = favList.findIndex(f => f.korean === item.korean && f.chinese === item.chinese);
+    if (idx >= 0) { favList.splice(idx, 1); }
+    else { favList.push({ korean: item.korean, chinese: item.chinese, type: item.type, topic: item.topic }); }
+    return favList;
+}
+
+function getItemsForMode(mode) {
+    const student = getCurrentUser();
+    if (!student) return [];
+
+    const favList = student.favorites || [];
+    const topic = document.getElementById('topicFilter')?.value || 'all';
+    const type = document.getElementById('typeFilter')?.value || 'all';
+    const favFilter = document.getElementById('favoriteFilter')?.value || 'all';
+
+    let items = [];
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
+    
+    if (mode === 3) {
+        items = [...grammarItems];
+    } else if (mode === 4) {
+        items = [...wordItems, ...grammarItems];
+    } else {
+        items = [...wordItems];
+    }
+
+    if (topic !== 'all') {
+        items = items.filter(item => item.topic === topic);
+    }
+    if (type !== 'all' && mode !== 3) {
+        items = items.filter(item => item.type === type);
+    }
+    if (favFilter === 'fav') {
+        items = items.filter(item => isFavorite(item, favList));
+    }
+
+    if (isFavPracticeMode) {
+        items = items.filter(item => isFavorite(item, favList));
+        if (items.length === 0) {
+            isFavPracticeMode = false;
+            return getItemsForMode(mode);
+        }
+    }
+
+    return shuffleArray([...items]);
+}
+
+function getExampleForItem(item) {
+    if (item.example) {
+        return { ko: item.example, zh: item.chinese + ' (예문)' };
+    }
+    // 如果没有例句，生成默认
+    return { ko: `${item.korean} (예문)`, zh: `${item.chinese} (예문)` };
+}
+
+// ============================================================
+// 渲染函数
+// ============================================================
+function renderCard(item, mode, favList) {
+    if (!item) {
+        document.getElementById('frontMain').textContent = '🎉 所有卡片已完成！';
+        document.getElementById('frontSub').textContent = '点击"下一轮"进入新一轮复习';
+        document.getElementById('backMain').textContent = '恭喜完成！';
+        document.getElementById('backSub').textContent = '';
+        document.getElementById('backExample').style.display = 'none';
+        document.getElementById('favCardBtn').style.display = 'none';
+        document.getElementById('masteredBtn').style.display = 'none';
+        return;
+    }
+
+    const isGram = item.type === 'grammar';
+    const label = isGram ? '🧩 语法' : '📖 单词';
+    const isFav = isFavorite(item, favList);
+
+    document.getElementById('favCardBtn').textContent = isFav ? '⭐ 已收藏' : '☆ 收藏';
+    document.getElementById('favCardBtn').style.display = 'inline-block';
+    document.getElementById('masteredBtn').style.display = 'inline-block';
+
+    isFlipped = false;
+    document.getElementById('flashcard').classList.remove('flipped');
+
+    if (mode === 2) {
+        document.getElementById('frontLabel').textContent = '🔊 语音闪卡 · 正面';
+        document.getElementById('frontMain').innerHTML = `
+            <div class="audio-only-icon" onclick="playAudio()">
+                🔊
+                <span class="sub">点击喇叭播放音频</span>
+            </div>
+        `;
+        document.getElementById('frontMain').style.fontSize = 'inherit';
+        document.getElementById('frontSub').textContent = '👆 点击翻转查看答案';
+        document.getElementById('speakFrontBtn').style.display = 'none';
+        document.getElementById('backLabel').textContent = '🔊 语音闪卡 · 背面';
+        document.getElementById('backMain').textContent = item.korean + ' → ' + item.chinese;
+        document.getElementById('backMain').style.fontSize = '28px';
+        document.getElementById('backSub').textContent = isGram ? '语法：' + item.korean : '';
+        const ex = getExampleForItem(item);
+        document.getElementById('backExample').style.display = 'block';
+        document.getElementById('exampleKo').textContent = ex.ko;
+        document.getElementById('exampleZh').textContent = ex.zh;
+        window.playAudio = function() { VoiceEngine.speak(item.korean).catch(() => {}); };
+        return;
+    }
+
+    document.getElementById('frontMain').innerHTML = '';
+    document.getElementById('frontMain').style.fontSize = '';
+    document.getElementById('speakFrontBtn').style.display = 'inline-block';
+
+    if (mode === 0) {
+        document.getElementById('frontLabel').textContent = label + ' · 正面';
+        document.getElementById('frontMain').textContent = item.korean;
+        document.getElementById('frontSub').textContent = '点击翻转查看中文';
+        document.getElementById('backLabel').textContent = label + ' · 背面';
+        document.getElementById('backMain').textContent = item.chinese;
+        document.getElementById('backSub').textContent = isGram ? '语法用法' : '中文释义';
+    } else if (mode === 1) {
+        document.getElementById('frontLabel').textContent = label + ' · 正面';
+        document.getElementById('frontMain').textContent = item.chinese;
+        document.getElementById('frontSub').textContent = '点击翻转查看韩语';
+        document.getElementById('speakFrontBtn').style.display = 'none';
+        document.getElementById('backLabel').textContent = label + ' · 背面';
+        document.getElementById('backMain').textContent = item.korean;
+        document.getElementById('backSub').textContent = isGram ? '语法形式' : '韩语表达';
+    } else if (mode === 3) {
+        document.getElementById('frontLabel').textContent = '🧩 语法闪卡 · 正面';
+        document.getElementById('frontMain').textContent = item.korean;
+        document.getElementById('frontMain').style.fontSize = '34px';
+        document.getElementById('frontSub').textContent = '点击翻转查看中文释义';
+        document.getElementById('backLabel').textContent = '🧩 语法闪卡 · 背面';
+        document.getElementById('backMain').textContent = item.chinese;
+        document.getElementById('backMain').style.fontSize = '28px';
+        document.getElementById('backSub').textContent = '语法用法';
+    }
+
+    const ex = getExampleForItem(item);
+    document.getElementById('backExample').style.display = 'block';
+    document.getElementById('exampleKo').textContent = ex.ko;
+    document.getElementById('exampleZh').textContent = ex.zh;
+
+    const total = filteredItems.length;
+    document.getElementById('cardCounter').textContent = `${currentIndex + 1} / ${total}`;
+    document.getElementById('progressText').textContent = `${currentIndex + 1} / ${total}`;
+}
+
+function showCard(index) {
+    if (filteredItems.length === 0) {
+        document.getElementById('frontMain').textContent = '🎉 所有卡片已完成！';
+        document.getElementById('frontSub').textContent = '点击"下一轮"进入新一轮复习';
+        document.getElementById('cardCounter').textContent = '0 / 0';
+        document.getElementById('progressText').textContent = '0 / 0';
+        return;
+    }
+    if (index < 0) index = 0;
+    if (index >= filteredItems.length) index = filteredItems.length - 1;
+    currentIndex = index;
+    currentItem = filteredItems[currentIndex];
+
+    const student = getCurrentUser();
+    const favList = student ? student.favorites || [] : [];
+    renderCard(currentItem, currentMode, favList);
+    updateStats();
+}
+
+function flipCard() {
+    isFlipped = !isFlipped;
+    document.getElementById('flashcard').classList.toggle('flipped');
+}
+
+function updateStats() {
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
+    document.getElementById('wordCount').textContent = wordItems.length;
+    document.getElementById('grammarCount').textContent = grammarItems.length;
+    const student = getCurrentUser();
+    if (student) {
+        const favList = student.favorites || [];
+        favorites = favList;
+        document.getElementById('favTotalCount').textContent = favList.length;
+        document.getElementById('studyFavCount').textContent = '⭐ ' + favList.length;
+        const total = getAllItems().length;
+        const mastered = (student.masteredItems || []).length;
+        const pct = total > 0 ? Math.min(100, Math.round((mastered / total) * 100)) : 0;
+        document.getElementById('masteryDisplay').textContent = pct + '% 掌握';
+        document.getElementById('studyUserName').textContent = student.name + ' 同学';
+        const round = student.currentRound || 1;
+        document.getElementById('currentRoundDisplay').textContent = '第' + round + '轮';
+    }
+    document.getElementById('currentModeLabel').textContent = ['韩语→中文', '中文→韩语', '语音闪卡', '语法闪卡', '综合测试'][currentMode] || '未知';
+}
+
+function handlePrev() {
+    if (filteredItems.length === 0 || currentMode === 4) return;
+    if (currentIndex > 0) { currentIndex--; showCard(currentIndex); }
+    else { currentIndex = filteredItems.length - 1; showCard(currentIndex); }
+}
+
+function handleNext() {
+    if (filteredItems.length === 0 || currentMode === 4) return;
+    if (currentIndex < filteredItems.length - 1) { currentIndex++; showCard(currentIndex); }
+    else {
+        filteredItems = getItemsForMode(currentMode);
+        shuffleArray(filteredItems);
+        currentIndex = 0;
+        showCard(currentIndex);
+    }
+}
+
+function handleReset() {
+    if (currentMode === 4) return;
+    filteredItems = getItemsForMode(currentMode);
+    shuffleArray(filteredItems);
+    currentIndex = 0;
+    showCard(currentIndex);
+}
+
+function handleMastered() {
+    const student = getCurrentUser();
+    if (!student || !currentItem || currentMode === 4) return;
+    if (!student.masteredItems) student.masteredItems = [];
+    if (!student.masteredItems.some(m => m.korean === currentItem.korean && m.chinese === currentItem.chinese)) {
+        student.masteredItems.push({ korean: currentItem.korean, chinese: currentItem.chinese, type: currentItem.type });
+        const total = getAllItems().length;
+        const masteredCount = student.masteredItems.length;
+        student.progress = total > 0 ? Math.min(100, Math.round((masteredCount / total) * 100)) : 0;
+        const storage = getStorage();
+        const idx = storage.students.findIndex(s => s.name === student.name && s.inviteCode === student.inviteCode);
+        if (idx >= 0) { storage.students[idx] = student; saveStorage(storage); setCurrentUser(student); }
+        
+        const key = currentItem.korean + '|||' + currentItem.chinese;
+        filteredItems = filteredItems.filter(item => (item.korean + '|||' + item.chinese) !== key);
+        if (filteredItems.length === 0) {
+            document.getElementById('frontMain').textContent = '🎉 本轮所有卡片已完成！';
+            document.getElementById('frontSub').textContent = '点击"下一轮"进入新一轮复习';
+            document.getElementById('cardCounter').textContent = '0 / 0';
+            document.getElementById('progressText').textContent = '0 / 0';
+            updateStats();
+            return;
+        }
+        if (currentIndex >= filteredItems.length) { currentIndex = filteredItems.length - 1; }
+        showCard(currentIndex);
+        updateStats();
+        renderFavList();
+    }
+}
+
+function handleFavCard() {
+    const student = getCurrentUser();
+    if (!student || !currentItem || currentMode === 4) return;
+    const storage = getStorage();
+    const studentData = storage.students.find(s => s.name === student.name && s.inviteCode === student.inviteCode);
+    if (!studentData) return;
+    studentData.favorites = toggleFavoriteItem(currentItem, studentData.favorites);
+    storage.students = storage.students.map(s => s.name === student.name && s.inviteCode === student.inviteCode ? studentData : s);
+    saveStorage(storage);
+    setCurrentUser(studentData);
+    favorites = studentData.favorites;
+    renderFavList();
+    updateStats();
+    renderCard(currentItem, currentMode, favorites);
+}
+
+function renderFavList() {
+    const student = getCurrentUser();
+    const favList = student ? student.favorites || [] : [];
+    const container = document.getElementById('favListContainer');
+    document.getElementById('favListCount').textContent = favList.length;
+    if (favList.length === 0) {
+        container.innerHTML = '<span style="color:#aaa;font-size:14px;">暂无收藏</span>';
+        return;
+    }
+    container.innerHTML = favList.map((f, i) =>
+        `<span class="fav-item" data-idx="${i}">${f.korean} → ${f.chinese}</span>`
+    ).join('');
+    document.querySelectorAll('.fav-item').forEach(el => {
+        el.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx);
+            const fav = favorites[idx];
+            const items = getAllItems();
+            const found = items.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
+            if (found >= 0) {
+                document.getElementById('topicFilter').value = 'all';
+                document.getElementById('typeFilter').value = 'all';
+                document.getElementById('favoriteFilter').value = 'all';
+                applyFilters();
+                const pos = filteredItems.findIndex(item => item.korean === fav.korean && item.chinese === fav.chinese);
+                if (pos >= 0) { currentIndex = pos; showCard(currentIndex); }
+            }
+        });
+    });
+}
+
+function startFavPractice() {
+    const student = getCurrentUser();
+    if (!student) return;
+    const favList = student.favorites || [];
+    if (favList.length === 0) {
+        alert('收藏夹为空，请先收藏一些单词或语法！');
+        return;
+    }
+    isFavPracticeMode = true;
+    switchMode(0);
+    filteredItems = getItemsForMode(currentMode);
+    currentIndex = 0;
+    if (filteredItems.length > 0) showCard(currentIndex);
+    updateStats();
+    document.getElementById('roundStatus').textContent = '⭐ 收藏专项练习 (' + filteredItems.length + ' 项)';
+}
+
+function clearFavorites() {
+    const student = getCurrentUser();
+    if (!student || !confirm('确定要清空所有收藏吗？')) return;
+    const storage = getStorage();
+    const studentData = storage.students.find(s => s.name === student.name && s.inviteCode === student.inviteCode);
+    if (studentData) {
+        studentData.favorites = [];
+        storage.students = storage.students.map(s => s.name === student.name && s.inviteCode === student.inviteCode ? studentData : s);
+        saveStorage(storage);
+        setCurrentUser(studentData);
+        favorites = [];
+        renderFavList();
+        updateStats();
+        if (currentItem) renderCard(currentItem, currentMode, favorites);
+    }
+}
+
+function handleAdvanceRound() {
+    const student = getCurrentUser();
+    if (!student) return;
+    const total = getAllItems().length;
+    const masteredCount = (student.masteredItems || []).length;
+    if (masteredCount < total) {
+        if (!confirm(`还有 ${total - masteredCount} 个卡片未掌握，确定要进入下一轮吗？`)) return;
+    }
+    student.currentRound = (student.currentRound || 1) + 1;
+    student.masteredItems = [];
+    student.progress = 0;
+    const storage = getStorage();
+    const idx = storage.students.findIndex(s => s.name === student.name && s.inviteCode === student.inviteCode);
+    if (idx >= 0) { storage.students[idx] = student; saveStorage(storage); setCurrentUser(student); }
+    isFavPracticeMode = false;
+    filteredItems = getItemsForMode(currentMode);
+    currentIndex = 0;
+    showCard(currentIndex);
+    updateStats();
+    renderFavList();
+    alert(`进入第 ${student.currentRound} 轮！所有卡片重新打乱。`);
+}
+
+function populateFilters() {
+    const topics = getTopics();
+    const topicFilter = document.getElementById('topicFilter');
+    topicFilter.innerHTML = '<option value="all">📂 全部主题</option>';
+    topics.forEach(t => {
+        topicFilter.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+    topicFilter.innerHTML += `<option value="语法">🧩 语法</option>`;
+}
+
+function applyFilters() {
+    if (currentMode === 4) return;
+    filteredItems = getItemsForMode(currentMode);
+    currentIndex = 0;
+    if (filteredItems.length === 0) {
+        document.getElementById('frontMain').textContent = '没有匹配的卡片';
+        document.getElementById('frontSub').textContent = '请调整筛选条件或添加词条';
+        document.getElementById('cardCounter').textContent = '0 / 0';
+        document.getElementById('filteredCount').textContent = '0 项';
+        return;
+    }
+    document.getElementById('filteredCount').textContent = `${filteredItems.length} 项`;
+    showCard(currentIndex);
+}
+
+// ============================================================
+// 测试系统 - 使用动态词库
+// ============================================================
+function generateTest() {
+    const wordItems = getWordItems();
+    const grammarItems = getGrammarItems();
+    const shuffledWords = shuffleArray([...wordItems]);
+    const shuffledGrammars = shuffleArray([...grammarItems]);
+    const usedWords = new Set();
+    const questions = [];
+
+    let fillBlankCount = 0;
+    for (const w of shuffledWords) {
+        if (fillBlankCount >= 4) break;
+        if (usedWords.has(w.korean)) continue;
+        usedWords.add(w.korean);
+        const options = shuffleArray([w.chinese, ...shuffleArray([...wordItems]).filter(x => !usedWords.has(x.korean)).slice(0, 3).map(x => x.chinese).filter(x => x !== w.chinese)]);
+        const finalOpts = shuffleArray([w.chinese, ...options.filter(x => x !== w.chinese).slice(0, 3)]);
+        while (finalOpts.length < 4) {
+            const extra = shuffleArray([...wordItems]).find(x => !finalOpts.includes(x.chinese) && !usedWords.has(x.korean));
+            if (extra) finalOpts.push(extra.chinese);
+            else break;
+        }
+        questions.push({
+            type: 'fill_blank',
+            question: `"${w.korean}"의 올바른 뜻은?`,
+            answer: w.chinese,
+            options: shuffleArray(finalOpts.slice(0, 4)),
+            explanation: `"${w.korean}"은(는) "${w.chinese}"(으)로 해석됩니다.`
+        });
+        fillBlankCount++;
+    }
+
+    let selectWordCount = 0;
+    for (const w of shuffledWords) {
+        if (selectWordCount >= 4) break;
+        if (usedWords.has(w.korean)) continue;
+        usedWords.add(w.korean);
+        const options = shuffleArray([w.korean, ...shuffleArray([...wordItems]).filter(x => !usedWords.has(x.korean)).slice(0, 3).map(x => x.korean).filter(x => x !== w.korean)]);
+        const finalOpts = shuffleArray([w.korean, ...options.filter(x => x !== w.korean).slice(0, 3)]);
+        while (finalOpts.length < 4) {
+            const extra = shuffleArray([...wordItems]).find(x => !finalOpts.includes(x.korean) && !usedWords.has(x.korean));
+            if (extra) finalOpts.push(extra.korean);
+            else break;
+        }
+        questions.push({
+            type: 'select_word',
+            question: `"${w.chinese}"의 올바른 한국어 단어는?`,
+            answer: w.korean,
+            options: shuffleArray(finalOpts.slice(0, 4)),
+            explanation: `"${w.chinese}"은(는) 한국어로 "${w.korean}"입니다.`
+        });
+        selectWordCount++;
+    }
+
+    let grammarCount = 0;
+    for (const g of shuffledGrammars) {
+        if (grammarCount >= 4) break;
+        const opts = shuffleArray([g.chinese, ...shuffleArray([...grammarItems]).filter(x => x.korean !== g.korean).slice(0, 3).map(x => x.chinese).filter(x => x !== g.chinese)]);
+        while (opts.length < 4) {
+            const extra = shuffleArray([...grammarItems]).find(x => !opts.includes(x.chinese) && x.korean !== g.korean);
+            if (extra) opts.push(extra.chinese);
+            else break;
+        }
+        questions.push({
+            type: 'grammar',
+            question: `다음 중 "${g.korean}"의 올바른 의미는?`,
+            answer: g.chinese,
+            options: shuffleArray(opts.slice(0, 4)),
+            explanation: `"${g.korean}"은(는) "${g.chinese}"(으)로 사용됩니다.`
+        });
+        grammarCount++;
+    }
+
+    if (questions.length === 0) {
+        alert('词条数量不足，无法生成测试。请至少添加5个单词和5个语法。');
+        return [];
+    }
+
+    return shuffleArray(questions);
+}
+
+function startTest() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    seconds = 0;
+    document.getElementById('testTimer').textContent = '⏱️ 00:00';
+    testStarted = true;
+    testSubmitted = false;
+    testQuestions = generateTest();
+    if (testQuestions.length === 0) {
+        document.getElementById('testContainer').innerHTML = '<p style="text-align:center;color:#6b7a8a;padding:30px 0;">词条数量不足，请添加更多词条</p>';
+        return;
+    }
+    testAnswers = testQuestions.map(() => null);
+    renderTest();
+    document.getElementById('testProgress').textContent = `0 / ${testQuestions.length} 题`;
+    timerInterval = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        document.getElementById('testTimer').textContent = `⏱️ ${m}:${s}`;
+    }, 1000);
+}
+
+function renderTest() {
+    const container = document.getElementById('testContainer');
+    if (testQuestions.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#6b7a8a;padding:30px 0;">没有足够的题目，请点击"开始新测试"重新生成</p>';
+        return;
+    }
+    let html = '';
+    testQuestions.forEach((q, idx) => {
+        const answered = testAnswers[idx] !== null;
+        const isCorrect = answered && testAnswers[idx] === q.answer;
+        const isWrong = answered && testAnswers[idx] !== q.answer;
+        const statusClass = isCorrect ? 'correct' : (isWrong ? 'wrong' : '');
+        html += `
+        <div class="test-question ${statusClass}" id="q_${idx}">
+            <div class="q-header">
+                <span>${getQuestionTypeLabel(q.type)} · 第 ${idx+1} 题</span>
+                <span>${answered ? (isCorrect ? '✅ 正确' : '❌ 错误') : '⏳ 未作答'}</span>
+            </div>
+            <div class="q-text">${q.question}</div>
+            <div class="q-options">
+                ${q.options.map(opt => `
+                    <div class="opt ${answered && opt === q.answer ? 'correct-answer' : ''} ${answered && testAnswers[idx] === opt && opt !== q.answer ? 'wrong-answer' : ''} ${answered ? 'disabled' : ''} ${testAnswers[idx] === opt ? 'selected' : ''}"
+                         onclick="${answered ? '' : `selectTestOption(${idx}, '${opt.replace(/"/g, '\\"')}')`}">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
+            <div class="q-feedback ${answered ? 'show' : ''} ${isCorrect ? 'correct' : (isWrong ? 'wrong' : '')}">
+                ${answered ? (isCorrect ? '✅ 正确！' : `❌ 正确答案: ${q.answer}`) : ''}
+                ${answered ? `<br><span style="font-size:13px;color:#6b7a8a;">📖 ${q.explanation || ''}</span>` : ''}
+            </div>
+        </div>
+        `;
+    });
+    container.innerHTML = html;
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    document.getElementById('testProgress').textContent = `${answeredCount} / ${testQuestions.length} 题`;
+    if (answeredCount === testQuestions.length && !testSubmitted) {
+        testSubmitted = true;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        setTimeout(showTestResult, 500);
+    }
+}
+
+function getQuestionTypeLabel(type) {
+    const map = { 'fill_blank': '📝 选词填空', 'select_word': '🔍 选择单词', 'grammar': '🧩 语法选择' };
+    return map[type] || '📝 选择题';
+}
+
+function selectTestOption(qIdx, value) {
+    if (testSubmitted) return;
+    if (testAnswers[qIdx] !== null) return;
+    testAnswers[qIdx] = value;
+    renderTest();
+    const answeredCount = testAnswers.filter(a => a !== null).length;
+    if (answeredCount === testQuestions.length && !testSubmitted) {
+        testSubmitted = true;
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        setTimeout(showTestResult, 800);
+    }
+}
+
+function showTestResult() {
+    let correct = 0;
+    testQuestions.forEach((q, idx) => { if (testAnswers[idx] === q.answer) correct++; });
+    const total = testQuestions.length;
+    const score = Math.round((correct / total) * 100);
+    const resultHtml = `
+    <div class="test-result">
+        <div class="score">${score}</div>
+        <div class="score-label">总分 (${correct}/${total})</div>
+        <div class="score-detail">
+            ${score >= 60 ? '🎉 恭喜通过！' : '💪 继续加油！'}
+            <br>⏱️ 用时: ${document.getElementById('testTimer').textContent.replace('⏱️ ', '')}
+        </div>
+        <button class="btn btn-primary" onclick="startTest()">🔄 重新测试</button>
+    </div>
+    `;
+    const container = document.getElementById('testContainer');
+    const existingResult = container.querySelector('.test-result');
+    if (existingResult) { existingResult.outerHTML = resultHtml; }
+    else { container.insertAdjacentHTML('afterbegin', resultHtml); }
+    document.getElementById('testProgress').textContent = `${total} / ${total} 题 ✅ 完成`;
+}
+
+// ============================================================
+// 模式切换
+// ============================================================
+function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.mode-tab[data-mode="${mode}"]`)?.classList.add('active');
+    document.getElementById('currentModeLabel').textContent = ['韩语→中文', '中文→韩语', '语音闪卡', '语法闪卡', '综合测试'][mode] || '未知';
+
+    const flashcardArea = document.getElementById('flashcardArea');
+    const testArea = document.getElementById('testArea');
+    const filterArea = document.getElementById('filterArea');
+    const progressControls = document.getElementById('progressControls');
+
+    if (mode === 4) {
+        flashcardArea.classList.add('hidden');
+        testArea.classList.remove('hidden');
+        filterArea.style.display = 'none';
+        progressControls.style.display = 'none';
+        if (!testStarted) { startTest(); }
+    } else {
+        flashcardArea.classList.remove('hidden');
+        testArea.classList.add('hidden');
+        filterArea.style.display = 'flex';
+        progressControls.style.display = 'flex';
+        isFavPracticeMode = false;
+        filteredItems = getItemsForMode(mode);
+        currentIndex = 0;
+        if (filteredItems.length > 0) { showCard(currentIndex); }
+        updateStats();
+    }
+}
+
+// ============================================================
+// 认证逻辑
+// ============================================================
+function showAuth() {
+    document.getElementById('authSection').style.display = 'block';
+    document.getElementById('studySection').classList.remove('show');
+    document.getElementById('studySection').style.display = 'none';
+    document.getElementById('teacherPanel').classList.remove('show');
+    document.getElementById('teacherPanel').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('teacherLoginBox').classList.add('hidden');
+}
+
+function showStudy() {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('studySection').style.display = 'block';
+    document.getElementById('studySection').classList.add('show');
+    document.getElementById('teacherPanel').classList.remove('show');
+    document.getElementById('teacherPanel').style.display = 'none';
+    populateFilters();
+    setTimeout(() => {
+        switchMode(0);
+        renderFavList();
+        updateStats();
+    }, 50);
+}
+
+function showTeacher() {
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('studySection').classList.remove('show');
+    document.getElementById('studySection').style.display = 'none';
+    document.getElementById('teacherPanel').style.display = 'block';
+    document.getElementById('teacherPanel').classList.add('show');
+    renderTeacherPanel();
+    renderWordManager();
+}
+
+function renderTeacherPanel() {
+    const storage = getStorage();
+    const students = storage.students || [];
+    const inviteCode = storage.inviteCode || 'YONSEI3-2024';
+    const allItems = getAllItems();
+    document.getElementById('teacherInviteCodeDisplay').textContent = inviteCode;
+    document.getElementById('teacherInviteCodeDisplay2').textContent = inviteCode;
+    document.getElementById('teacherStudentCount').textContent = students.length;
+    document.getElementById('teacherTotalCards').textContent = allItems.length;
+    const totalProgress = students.reduce((sum, s) => sum + (s.progress || 0), 0);
+    const avg = students.length > 0 ? Math.round(totalProgress / students.length) : 0;
+    document.getElementById('teacherAvgProgress').textContent = avg + '%';
+    const container = document.getElementById('studentListContainer');
+    if (students.length === 0) {
+        container.innerHTML = '<p style="color:#6b7a8a;grid-column:1/-1;text-align:center;padding:16px 0;">暂无学生数据</p>';
+        return;
+    }
+    container.innerHTML = students.map(s => {
+        const mastered = (s.masteredItems || []).length;
+        const total = allItems.length;
+        const pct = total > 0 ? Math.min(100, Math.round((mastered / total) * 100)) : 0;
+        return `
+        <div class="student-card">
+            <div class="name">${s.name}</div>
+            <div class="info">⭐ 收藏 ${(s.favorites || []).length} 个</div>
+            <div class="info">📖 已掌握 ${mastered}/${total}</div>
+            <div class="progress-bar"><div class="fill" style="width:${pct}%"></div></div>
+            <span class="badge ${pct > 50 ? 'active' : 'inactive'}">${pct}% 掌握</span>
+        </div>
+    `}).join('');
+}
+
+// ============================================================
+// 词库管理 - 教师端核心功能
+// ============================================================
+function renderWordManager() {
+    const bank = getWordBank();
+    const allItems = [...(bank.words || []), ...(bank.grammars || [])];
+    const container = document.getElementById('wordListContainer');
+    
+    document.getElementById('managerWordCount').textContent = (bank.words || []).length;
+    document.getElementById('managerGrammarCount').textContent = (bank.grammars || []).length;
+    
+    // 显示存储使用量
+    let total = 0;
+    for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+            total += localStorage[key].length * 2;
+        }
+    }
+    document.getElementById('storageUsage').textContent = (total / 1024 / 1024).toFixed(2) + 'MB';
+
+    if (allItems.length === 0) {
+        container.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;font-size:14px;">暂无词条，请添加或导入</div>';
+        return;
+    }
+
+    container.innerHTML = allItems.map((item, idx) => `
+        <div class="word-item" data-idx="${idx}">
+            <div class="info">
+                <span class="ko">${item.korean}</span>
+                <span class="zh">→ ${item.chinese}</span>
+                <span class="tag">${item.type === 'word' ? '📖 单词' : '🧩 语法'}</span>
+                <span class="tag">${item.topic || '未分类'}</span>
+                ${item.example ? `<span class="tag" style="background:#e8f0fe;">💡 ${item.example}</span>` : ''}
+            </div>
+            <button class="del-btn" data-idx="${idx}" title="删除">✕</button>
+        </div>
+    `).join('');
+
+    // 删除事件
+    document.querySelectorAll('.word-item .del-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.idx);
+            const all = getAllItems();
+            if (idx >= 0 && idx < all.length) {
+                const item = all[idx];
+                if (confirm(`确定删除 "${item.korean} (${item.chinese})" 吗？`)) {
+                    const bank2 = getWordBank();
+                    const words = bank2.words || [];
+                    const grammars = bank2.grammars || [];
+                    const grammarCount = grammars.length;
+                    if (idx < grammarCount) {
+                        const newGrammars = grammars.filter((_, i) => i !== idx);
+                        saveWordBank(words, newGrammars);
+                    } else {
+                        const wordIdx = idx - grammarCount;
+                        const newWords = words.filter((_, i) => i !== wordIdx);
+                        saveWordBank(newWords, grammars);
+                    }
+                    renderWordManager();
+                    // 刷新学生端
+                    if (document.getElementById('studySection').classList.contains('show')) {
+                        applyFilters();
+                        updateStats();
+                    }
+                }
+            }
+        });
+    });
+}
+
+// 添加单条
+function addSingleItem() {
+    const korean = document.getElementById('newKorean').value.trim();
+    const chinese = document.getElementById('newChinese').value.trim();
+    const topic = document.getElementById('newTopic').value.trim() || '自定义';
+    const type = document.getElementById('newType').value;
+    const example = document.getElementById('newExample').value.trim();
+
+    if (!korean || !chinese) {
+        alert('请填写韩语和中文！');
+        return;
+    }
+
+    const bank = getWordBank();
+    const newItem = { korean, chinese, topic, type, example: example || '' };
+
+    if (type === 'word') {
+        bank.words = bank.words || [];
+        bank.words.push(newItem);
+    } else {
+        bank.grammars = bank.grammars || [];
+        bank.grammars.push(newItem);
+    }
+
+    saveWordBank(bank.words, bank.grammars);
+    renderWordManager();
+
+    // 清空输入
+    document.getElementById('newKorean').value = '';
+    document.getElementById('newChinese').value = '';
+    document.getElementById('newExample').value = '';
+
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+}
+
+// 批量导入
+function batchImport() {
+    const text = document.getElementById('batchImportText').value.trim();
+    if (!text) {
+        alert('请粘贴要导入的词条数据！');
+        return;
+    }
+
+    const lines = text.split('\n').filter(line => line.trim());
+    const bank = getWordBank();
+    bank.words = bank.words || [];
+    bank.grammars = bank.grammars || [];
+    let added = 0;
+
+    lines.forEach(line => {
+        const parts = line.split('|').map(s => s.trim());
+        if (parts.length >= 4) {
+            const [korean, chinese, topic, type, example] = parts;
+            const item = {
+                korean: korean,
+                chinese: chinese,
+                topic: topic || '自定义',
+                type: type === 'grammar' ? 'grammar' : 'word',
+                example: example || ''
+            };
+            if (item.type === 'word') {
+                bank.words.push(item);
+            } else {
+                bank.grammars.push(item);
+            }
+            added++;
+        } else if (parts.length >= 2) {
+            // 简化格式: 韩语 | 中文
+            const [korean, chinese] = parts;
+            const item = {
+                korean: korean,
+                chinese: chinese,
+                topic: '自定义',
+                type: 'word',
+                example: ''
+            };
+            bank.words.push(item);
+            added++;
+        }
+    });
+
+    saveWordBank(bank.words, bank.grammars);
+    renderWordManager();
+    document.getElementById('batchImportText').value = '';
+    alert(`✅ 成功导入 ${added} 个词条！`);
+
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+}
+
+// 加载默认示例
+function loadDefaultData() {
+    if (!confirm('将加载默认示例数据，会覆盖当前词库。确定吗？')) return;
+    const words = getDefaultWords();
+    const grammars = getDefaultGrammars();
+    saveWordBank(words, grammars);
+    renderWordManager();
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+    alert(`✅ 已加载 ${words.length} 个单词和 ${grammars.length} 个语法！`);
+}
+
+// 清空词库
+function clearAllWords() {
+    if (!confirm('⚠️ 确定要清空整个词库吗？此操作不可恢复！')) return;
+    if (!confirm('再次确认：所有单词和语法将被删除！')) return;
+    saveWordBank([], []);
+    renderWordManager();
+    if (document.getElementById('studySection').classList.contains('show')) {
+        applyFilters();
+        updateStats();
+    }
+    alert('✅ 词库已清空');
+}
+
+// ============================================================
+// 学生登录/注册
+// ============================================================
+function handleLogin() {
+    const code = document.getElementById('loginInviteCode').value.trim();
+    const name = document.getElementById('loginName').value.trim();
+    const error = document.getElementById('loginError');
+    if (!code || !name) {
+        error.textContent = '请填写邀请码和姓名';
+        error.classList.add('show');
+        return;
+    }
+    const storage = getStorage();
+    const student = storage.students.find(s => s.inviteCode === code && s.name === name);
+    if (!student) {
+        error.textContent = '邀请码或姓名不正确，请检查或先注册';
+        error.classList.add('show');
+        return;
+    }
+    error.classList.remove('show');
+    if (!student.masteredItems) student.masteredItems = [];
+    if (!student.currentRound) student.currentRound = 1;
+    setCurrentUser(student);
+    favorites = student.favorites || [];
+    currentStudent = student;
+    showStudy();
+}
+
+function handleRegister() {
+    const code = document.getElementById('regInviteCode').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const error = document.getElementById('regError');
+    const success = document.getElementById('regSuccess');
+    if (!code || !name) {
+        error.textContent = '请填写邀请码和姓名';
+        error.classList.add('show');
+        return;
+    }
+    const storage = getStorage();
+    if (storage.inviteCode !== code) {
+        error.textContent = '邀请码无效，请向教师获取正确邀请码';
+        error.classList.add('show');
+        return;
+    }
+    if (storage.students.some(s => s.name === name)) {
+        error.textContent = '该姓名已被注册，请使用其他姓名';
+        error.classList.add('show');
+        return;
+    }
+    error.classList.remove('show');
+    const newStudent = {
+        name: name,
+        inviteCode: code,
+        favorites: [],
+        masteredItems: [],
+        currentRound: 1,
+        progress: 0
+    };
+    storage.students.push(newStudent);
+    saveStorage(storage);
+    success.textContent = '✅ 注册成功！正在进入学习...';
+    success.classList.add('show');
+    setCurrentUser(newStudent);
+    favorites = [];
+    currentStudent = newStudent;
+    setTimeout(() => {
+        success.classList.remove('show');
+        showStudy();
+    }, 600);
+}
+
+function handleTeacherLogin() {
+    const pwd = document.getElementById('teacherPassword').value.trim();
+    const error = document.getElementById('teacherError');
+    if (pwd !== TEACHER_PASSWORD) {
+        error.textContent = '❌ 教师密码错误，请重新输入';
+        error.classList.add('show');
+        document.getElementById('teacherPassword').value = '';
+        document.getElementById('teacherPassword').focus();
+        return;
+    }
+    error.classList.remove('show');
+    showTeacher();
+}
+
+function handleLogout() {
+    clearCurrentUser();
+    favorites = [];
+    currentStudent = null;
+    isFavPracticeMode = false;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    VoiceEngine.cancel();
+    showAuth();
+}
+
+// ============================================================
+// 界面切换
+// ============================================================
+function switchToLogin() {
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('teacherLoginBox').classList.add('hidden');
+}
+
+function switchToRegister() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('registerBox').classList.remove('hidden');
+    document.getElementById('teacherLoginBox').classList.add('hidden');
+}
+
+function switchToTeacherLogin() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('registerBox').classList.add('hidden');
+    document.getElementById('teacherLoginBox').classList.remove('hidden');
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+function init() {
+    // 确保有词库
+    const bank = getWordBank();
+    if ((bank.words || []).length === 0 && (bank.grammars || []).length === 0) {
+        saveWordBank(getDefaultWords(), getDefaultGrammars());
+    }
+
+    const user = getCurrentUser();
+    if (user) {
+        const storage = getStorage();
+        const student = storage.students.find(s => s.name === user.name && s.inviteCode === user.inviteCode);
+        if (student) {
+            if (!student.masteredItems) student.masteredItems = [];
+            if (!student.currentRound) student.currentRound = 1;
+            setCurrentUser(student);
+            favorites = student.favorites || [];
+            currentStudent = student;
+            showStudy();
+            return;
+        } else { clearCurrentUser(); }
+    }
+    showAuth();
+    switchToLogin();
+}
+
+function bindEvents() {
+    // 切换界面
+    document.getElementById('switchToLogin').addEventListener('click', switchToLogin);
+    document.getElementById('switchToRegister').addEventListener('click', switchToRegister);
+    document.getElementById('switchToTeacherLogin').addEventListener('click', switchToTeacherLogin);
+    document.getElementById('switchToStudentLogin').addEventListener('click', switchToLogin);
+    
+    // 登录/注册
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('registerBtn').addEventListener('click', handleRegister);
+    document.getElementById('teacherLoginBtn').addEventListener('click', handleTeacherLogin);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    document.getElementById('teacherLogoutBtn').addEventListener('click', handleLogout);
+    
+    // 回车键
+    document.getElementById('loginName').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    document.getElementById('loginInviteCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    document.getElementById('regName').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
+    document.getElementById('regInviteCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
+    document.getElementById('teacherPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTeacherLogin(); });
+
+    // 闪卡操作
+    document.getElementById('flipBtn').addEventListener('click', (e) => { e.stopPropagation(); flipCard(); });
+    document.getElementById('flipBackBtn').addEventListener('click', (e) => { e.stopPropagation(); flipCard(); });
+    document.getElementById('flashcard').addEventListener('click', (e) => {
+        if (e.target.closest('.action-row') || e.target.closest('.speak-btn') || e.target.closest('.audio-only-icon')) return;
+        flipCard();
+    });
+
+    document.getElementById('speakFrontBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentItem) VoiceEngine.speak(currentItem.korean).catch(() => {});
+    });
+    document.getElementById('speakBackBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (currentItem) VoiceEngine.speak(currentItem.korean).catch(() => {});
+    });
+
+    document.getElementById('favCardBtn').addEventListener('click', (e) => { e.stopPropagation(); handleFavCard(); });
+    document.getElementById('masteredBtn').addEventListener('click', (e) => { e.stopPropagation(); handleMastered(); });
+    document.getElementById('prevBtn').addEventListener('click', handlePrev);
+    document.getElementById('nextBtn').addEventListener('click', handleNext);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
+    document.getElementById('advanceRoundBtn').addEventListener('click', handleAdvanceRound);
+    document.getElementById('favPracticeBtn').addEventListener('click', startFavPractice);
+    document.getElementById('clearFavBtn').addEventListener('click', clearFavorites);
+
+    document.getElementById('topicFilter').addEventListener('change', () => { if (currentMode !== 4) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+    document.getElementById('typeFilter').addEventListener('change', () => { if (currentMode !== 4) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+    document.getElementById('favoriteFilter').addEventListener('change', () => { if (currentMode !== 4) { filteredItems = getItemsForMode(currentMode); showCard(0); } });
+
+    document.getElementById('favToggleBtn').addEventListener('click', () => {
+        const area = document.getElementById('favListArea');
+        area.classList.toggle('show');
+        if (area.classList.contains('show')) renderFavList();
+    });
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const mode = parseInt(this.dataset.mode);
+            switchMode(mode);
+        });
+    });
+
+    document.getElementById('startTestBtn').addEventListener('click', startTest);
+
+    // 教师端词库管理
+    document.getElementById('addWordBtn').addEventListener('click', addSingleItem);
+    document.getElementById('batchImportBtn').addEventListener('click', batchImport);
+    document.getElementById('loadDefaultBtn').addEventListener('click', loadDefaultData);
+    document.getElementById('clearAllWordsBtn').addEventListener('click', clearAllWords);
+
+    // 教师端邀请码
+    document.getElementById('regenerateInviteBtn').addEventListener('click', () => {
+        const storage = getStorage();
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = 'YONSEI3-';
+        for (let i = 0; i < 6; i++) { code += chars[Math.floor(Math.random() * chars.length)]; }
+        storage.inviteCode = code;
+        saveStorage(storage);
+        renderTeacherPanel();
+    });
+
+    document.getElementById('copyInviteBtn').addEventListener('click', () => {
+        const storage = getStorage();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(storage.inviteCode).then(() => {
+                document.getElementById('copyInviteBtn').textContent = '✅ 已复制';
+                setTimeout(() => document.getElementById('copyInviteBtn').textContent = '📋 复制', 2000);
+            });
+        } else {
+            // 降级方案
+            const input = document.createElement('input');
+            input.value = storage.inviteCode;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            document.getElementById('copyInviteBtn').textContent = '✅ 已复制';
+            setTimeout(() => document.getElementById('copyInviteBtn').textContent = '📋 复制', 2000);
+        }
+    });
+}
+
+// ============================================================
+// 启动
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    init();
+    bindEvents();
+    console.log('✅ 延世3 闪卡学习系统已启动 (教师自定义词库版)');
+    console.log('🔑 教师密码:', TEACHER_PASSWORD);
+    const bank = getWordBank();
+    console.log('📊 当前词库: 单词', (bank.words || []).length, '个, 语法', (bank.grammars || []).length, '个');
+});
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    init();
+    bindEvents();
+    console.log('✅ 延世3 闪卡学习系统已启动 (教师自定义词库版)');
+}
+</script>
+</body>
+</html>
