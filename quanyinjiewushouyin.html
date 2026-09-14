@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>韩语发音练习 · 全音节</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif;
+        }
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            padding: 30px 24px 35px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a2b3c;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            color: #6b7a8a;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .group-badge {
+            display: inline-block;
+            background: #eef2f6;
+            padding: 4px 16px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2b3c;
+            margin-bottom: 16px;
+        }
+
+        .card-container {
+            perspective: 1200px;
+            min-height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 16px;
+        }
+        .card {
+            width: 100%;
+            max-width: 420px;
+            min-height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+            cursor: pointer;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            min-height: 300px;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 30px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 2px solid #e9edf2;
+            background: white;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background: #f8fafc;
+        }
+        .card-face .main-char {
+            font-size: 96px;
+            font-weight: 700;
+            color: #0f1e2e;
+            line-height: 1.2;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Nanum Gothic', sans-serif;
+        }
+        .card-face .hint {
+            font-size: 14px;
+            color: #8899aa;
+            margin-top: 16px;
+        }
+        .card-face .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .card-face .action-row .btn {
+            padding: 8px 20px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #eef2f6;
+            color: #1f2e3f;
+            touch-action: manipulation;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: #1a2b3c;
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #0f1e2e;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #d0d9e3;
+        }
+        .btn-outline:hover:not(:disabled) {
+            background: #f2f6fc;
+        }
+        .btn-success {
+            background: #2e7d5e;
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #1f5f45;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px 30px;
+            margin: 16px 0 8px;
+            font-size: 13px;
+            color: #4d6272;
+        }
+        .stats span {
+            font-weight: 600;
+            color: #1a2b3c;
+        }
+        .progress-text {
+            font-size: 14px;
+            color: #6b7a8a;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 16px;
+            }
+            .card-face .main-char {
+                font-size: 72px;
+            }
+            .card {
+                min-height: 260px;
+            }
+            .card-face {
+                min-height: 260px;
+                padding: 20px;
+            }
+            .btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔊 韩语发音练习</h1>
+        <p class="subtitle">点击卡片翻转 · 优先未掌握</p>
+        <div class="group-badge" id="groupBadge">ㄱ 行</div>
+
+        <div class="card-container">
+            <div class="card" id="flashcard">
+                <div class="card-face" id="cardFront">
+                    <div class="main-char" id="frontMain">가</div>
+                    <div class="hint" id="frontHint">👆 点击翻转</div>
+                    <div class="action-row">
+                        <button class="btn btn-outline" id="flipBtn">🔄 翻转</button>
+                    </div>
+                </div>
+                <div class="card-face card-back" id="cardBack">
+                    <div class="main-char" id="backMain">❓</div>
+                    <div class="hint" id="backHint">👆 点击翻转返回</div>
+                    <div class="action-row">
+                        <button class="btn btn-outline" id="flipBackBtn">🔄 翻转</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div>📖 已学 <span id="learnedCount">0</span></div>
+            <div>✅ 已掌握 <span id="masteredCount">0</span></div>
+            <div>📚 总数 <span id="totalCount">0</span></div>
+        </div>
+
+        <div class="progress-text" id="progressText">点击「下一张」开始练习</div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px;">
+            <button class="btn btn-primary" id="nextBtn">🎲 下一张</button>
+            <button class="btn btn-success" id="masterBtn">✅ 已掌握</button>
+            <button class="btn btn-outline" id="resetBtn">🔄 重置</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 全部发音数据（ㄱ~ㅎ 共 19行 × 21个 = 399个音节）
+        // 按您提供的表格完整整理
+        // ============================================================
+        const PRONUNCIATION_DATA = [
+            // ㄱ 行
+            { hangul: '가', group: 'ㄱ' }, { hangul: '거', group: 'ㄱ' }, { hangul: '고', group: 'ㄱ' },
+            { hangul: '구', group: 'ㄱ' }, { hangul: '기', group: 'ㄱ' }, { hangul: '그', group: 'ㄱ' },
+            { hangul: '개', group: 'ㄱ' }, { hangul: '게', group: 'ㄱ' }, { hangul: '갸', group: 'ㄱ' },
+            { hangul: '겨', group: 'ㄱ' }, { hangul: '교', group: 'ㄱ' }, { hangul: '규', group: 'ㄱ' },
+            { hangul: '걔', group: 'ㄱ' }, { hangul: '계', group: 'ㄱ' }, { hangul: '과', group: 'ㄱ' },
+            { hangul: '궈', group: 'ㄱ' }, { hangul: '괘', group: 'ㄱ' }, { hangul: '궤', group: 'ㄱ' },
+            { hangul: '괴', group: 'ㄱ' }, { hangul: '귀', group: 'ㄱ' }, { hangul: '긔', group: 'ㄱ' },
+
+            // ㅋ 行
+            { hangul: '카', group: 'ㅋ' }, { hangul: '커', group: 'ㅋ' }, { hangul: '코', group: 'ㅋ' },
+            { hangul: '쿠', group: 'ㅋ' }, { hangul: '키', group: 'ㅋ' }, { hangul: '크', group: 'ㅋ' },
+            { hangul: '캐', group: 'ㅋ' }, { hangul: '케', group: 'ㅋ' }, { hangul: '캬', group: 'ㅋ' },
+            { hangul: '켜', group: 'ㅋ' }, { hangul: '쿄', group: 'ㅋ' }, { hangul: '큐', group: 'ㅋ' },
+            { hangul: '컈', group: 'ㅋ' }, { hangul: '켸', group: 'ㅋ' }, { hangul: '콰', group: 'ㅋ' },
+            { hangul: '쿼', group: 'ㅋ' }, { hangul: '쾌', group: 'ㅋ' }, { hangul: '퀘', group: 'ㅋ' },
+            { hangul: '쾨', group: 'ㅋ' }, { hangul: '퀴', group: 'ㅋ' }, { hangul: '킈', group: 'ㅋ' },
+
+            // ㄲ 行
+            { hangul: '까', group: 'ㄲ' }, { hangul: '꺼', group: 'ㄲ' }, { hangul: '꼬', group: 'ㄲ' },
+            { hangul: '꾸', group: 'ㄲ' }, { hangul: '끼', group: 'ㄲ' }, { hangul: '끄', group: 'ㄲ' },
+            { hangul: '깨', group: 'ㄲ' }, { hangul: '께', group: 'ㄲ' }, { hangul: '꺄', group: 'ㄲ' },
+            { hangul: '껴', group: 'ㄲ' }, { hangul: '꾜', group: 'ㄲ' }, { hangul: '뀨', group: 'ㄲ' },
+            { hangul: '꺠', group: 'ㄲ' }, { hangul: '꼐', group: 'ㄲ' }, { hangul: '꽈', group: 'ㄲ' },
+            { hangul: '꿔', group: 'ㄲ' }, { hangul: '꽤', group: 'ㄲ' }, { hangul: '꿰', group: 'ㄲ' },
+            { hangul: '꾀', group: 'ㄲ' }, { hangul: '뀌', group: 'ㄲ' }, { hangul: '끠', group: 'ㄲ' },
+
+            // ㄴ 行
+            { hangul: '나', group: 'ㄴ' }, { hangul: '너', group: 'ㄴ' }, { hangul: '노', group: 'ㄴ' },
+            { hangul: '누', group: 'ㄴ' }, { hangul: '니', group: 'ㄴ' }, { hangul: '느', group: 'ㄴ' },
+            { hangul: '내', group: 'ㄴ' }, { hangul: '네', group: 'ㄴ' }, { hangul: '냐', group: 'ㄴ' },
+            { hangul: '녀', group: 'ㄴ' }, { hangul: '뇨', group: 'ㄴ' }, { hangul: '뉴', group: 'ㄴ' },
+            { hangul: '냬', group: 'ㄴ' }, { hangul: '녜', group: 'ㄴ' }, { hangul: '놔', group: 'ㄴ' },
+            { hangul: '눠', group: 'ㄴ' }, { hangul: '놰', group: 'ㄴ' }, { hangul: '눼', group: 'ㄴ' },
+            { hangul: '뇌', group: 'ㄴ' }, { hangul: '뉘', group: 'ㄴ' }, { hangul: '늬', group: 'ㄴ' },
+
+            // ㄷ 行
+            { hangul: '다', group: 'ㄷ' }, { hangul: '더', group: 'ㄷ' }, { hangul: '도', group: 'ㄷ' },
+            { hangul: '두', group: 'ㄷ' }, { hangul: '디', group: 'ㄷ' }, { hangul: '드', group: 'ㄷ' },
+            { hangul: '대', group: 'ㄷ' }, { hangul: '데', group: 'ㄷ' }, { hangul: '댜', group: 'ㄷ' },
+            { hangul: '뎌', group: 'ㄷ' }, { hangul: '됴', group: 'ㄷ' }, { hangul: '듀', group: 'ㄷ' },
+            { hangul: '댸', group: 'ㄷ' }, { hangul: '뎨', group: 'ㄷ' }, { hangul: '돠', group: 'ㄷ' },
+            { hangul: '둬', group: 'ㄷ' }, { hangul: '돼', group: 'ㄷ' }, { hangul: '뒈', group: 'ㄷ' },
+            { hangul: '되', group: 'ㄷ' }, { hangul: '뒤', group: 'ㄷ' }, { hangul: '듸', group: 'ㄷ' },
+
+            // ㅌ 行
+            { hangul: '타', group: 'ㅌ' }, { hangul: '터', group: 'ㅌ' }, { hangul: '토', group: 'ㅌ' },
+            { hangul: '투', group: 'ㅌ' }, { hangul: '티', group: 'ㅌ' }, { hangul: '트', group: 'ㅌ' },
+            { hangul: '태', group: 'ㅌ' }, { hangul: '테', group: 'ㅌ' }, { hangul: '탸', group: 'ㅌ' },
+            { hangul: '텨', group: 'ㅌ' }, { hangul: '툐', group: 'ㅌ' }, { hangul: '튜', group: 'ㅌ' },
+            { hangul: '턔', group: 'ㅌ' }, { hangul: '톄', group: 'ㅌ' }, { hangul: '톼', group: 'ㅌ' },
+            { hangul: '퉈', group: 'ㅌ' }, { hangul: '퇘', group: 'ㅌ' }, { hangul: '퉤', group: 'ㅌ' },
+            { hangul: '퇴', group: 'ㅌ' }, { hangul: '튀', group: 'ㅌ' }, { hangul: '틔', group: 'ㅌ' },
+
+            // ㄸ 行
+            { hangul: '따', group: 'ㄸ' }, { hangul: '떠', group: 'ㄸ' }, { hangul: '또', group: 'ㄸ' },
+            { hangul: '뚜', group: 'ㄸ' }, { hangul: '띠', group: 'ㄸ' }, { hangul: '뜨', group: 'ㄸ' },
+            { hangul: '때', group: 'ㄸ' }, { hangul: '떼', group: 'ㄸ' }, { hangul: '땨', group: 'ㄸ' },
+            { hangul: '뗘', group: 'ㄸ' }, { hangul: '뚀', group: 'ㄸ' }, { hangul: '뜌', group: 'ㄸ' },
+            { hangul: '떄', group: 'ㄸ' }, { hangul: '뗴', group: 'ㄸ' }, { hangul: '똬', group: 'ㄸ' },
+            { hangul: '뚸', group: 'ㄸ' }, { hangul: '뙈', group: 'ㄸ' }, { hangul: '뛔', group: 'ㄸ' },
+            { hangul: '뙤', group: 'ㄸ' }, { hangul: '뛰', group: 'ㄸ' }, { hangul: '띄', group: 'ㄸ' },
+
+            // ㄹ 行
+            { hangul: '라', group: 'ㄹ' }, { hangul: '러', group: 'ㄹ' }, { hangul: '로', group: 'ㄹ' },
+            { hangul: '루', group: 'ㄹ' }, { hangul: '리', group: 'ㄹ' }, { hangul: '르', group: 'ㄹ' },
+            { hangul: '래', group: 'ㄹ' }, { hangul: '레', group: 'ㄹ' }, { hangul: '랴', group: 'ㄹ' },
+            { hangul: '려', group: 'ㄹ' }, { hangul: '료', group: 'ㄹ' }, { hangul: '류', group: 'ㄹ' },
+            { hangul: '럐', group: 'ㄹ' }, { hangul: '례', group: 'ㄹ' }, { hangul: '롸', group: 'ㄹ' },
+            { hangul: '뤄', group: 'ㄹ' }, { hangul: '뢔', group: 'ㄹ' }, { hangul: '뤠', group: 'ㄹ' },
+            { hangul: '뢰', group: 'ㄹ' }, { hangul: '뤼', group: 'ㄹ' }, { hangul: '릐', group: 'ㄹ' },
+
+            // ㅂ 行
+            { hangul: '바', group: 'ㅂ' }, { hangul: '버', group: 'ㅂ' }, { hangul: '보', group: 'ㅂ' },
+            { hangul: '부', group: 'ㅂ' }, { hangul: '비', group: 'ㅂ' }, { hangul: '브', group: 'ㅂ' },
+            { hangul: '배', group: 'ㅂ' }, { hangul: '베', group: 'ㅂ' }, { hangul: '뱌', group: 'ㅂ' },
+            { hangul: '벼', group: 'ㅂ' }, { hangul: '뵤', group: 'ㅂ' }, { hangul: '뷰', group: 'ㅂ' },
+            { hangul: '뱨', group: 'ㅂ' }, { hangul: '볘', group: 'ㅂ' }, { hangul: '봐', group: 'ㅂ' },
+            { hangul: '붜', group: 'ㅂ' }, { hangul: '봬', group: 'ㅂ' }, { hangul: '붸', group: 'ㅂ' },
+            { hangul: '뵈', group: 'ㅂ' }, { hangul: '뷔', group: 'ㅂ' }, { hangul: '븨', group: 'ㅂ' },
+
+            // ㅍ 行
+            { hangul: '파', group: 'ㅍ' }, { hangul: '퍼', group: 'ㅍ' }, { hangul: '포', group: 'ㅍ' },
+            { hangul: '푸', group: 'ㅍ' }, { hangul: '피', group: 'ㅍ' }, { hangul: '프', group: 'ㅍ' },
+            { hangul: '패', group: 'ㅍ' }, { hangul: '페', group: 'ㅍ' }, { hangul: '퍄', group: 'ㅍ' },
+            { hangul: '펴', group: 'ㅍ' }, { hangul: '표', group: 'ㅍ' }, { hangul: '퓨', group: 'ㅍ' },
+            { hangul: '퍠', group: 'ㅍ' }, { hangul: '폐', group: 'ㅍ' }, { hangul: '퐈', group: 'ㅍ' },
+            { hangul: '풔', group: 'ㅍ' }, { hangul: '퐤', group: 'ㅍ' }, { hangul: '풰', group: 'ㅍ' },
+            { hangul: '푀', group: 'ㅍ' }, { hangul: '퓌', group: 'ㅍ' }, { hangul: '픠', group: 'ㅍ' },
+
+            // ㅃ 行
+            { hangul: '빠', group: 'ㅃ' }, { hangul: '뻐', group: 'ㅃ' }, { hangul: '뽀', group: 'ㅃ' },
+            { hangul: '뿌', group: 'ㅃ' }, { hangul: '삐', group: 'ㅃ' }, { hangul: '쁘', group: 'ㅃ' },
+            { hangul: '빼', group: 'ㅃ' }, { hangul: '뻬', group: 'ㅃ' }, { hangul: '뺘', group: 'ㅃ' },
+            { hangul: '뼈', group: 'ㅃ' }, { hangul: '뾰', group: 'ㅃ' }, { hangul: '쀼', group: 'ㅃ' },
+            { hangul: '뺴', group: 'ㅃ' }, { hangul: '뼤', group: 'ㅃ' }, { hangul: '뽜', group: 'ㅃ' },
+            { hangul: '뿨', group: 'ㅃ' }, { hangul: '뽸', group: 'ㅃ' }, { hangul: '쀄', group: 'ㅃ' },
+            { hangul: '뾔', group: 'ㅃ' }, { hangul: '쀠', group: 'ㅃ' }, { hangul: '쁴', group: 'ㅃ' },
+
+            // ㅁ 行
+            { hangul: '마', group: 'ㅁ' }, { hangul: '머', group: 'ㅁ' }, { hangul: '모', group: 'ㅁ' },
+            { hangul: '무', group: 'ㅁ' }, { hangul: '미', group: 'ㅁ' }, { hangul: '므', group: 'ㅁ' },
+            { hangul: '매', group: 'ㅁ' }, { hangul: '메', group: 'ㅁ' }, { hangul: '먀', group: 'ㅁ' },
+            { hangul: '며', group: 'ㅁ' }, { hangul: '묘', group: 'ㅁ' }, { hangul: '뮤', group: 'ㅁ' },
+            { hangul: '먜', group: 'ㅁ' }, { hangul: '몌', group: 'ㅁ' }, { hangul: '뫄', group: 'ㅁ' },
+            { hangul: '뭐', group: 'ㅁ' }, { hangul: '뫠', group: 'ㅁ' }, { hangul: '뭬', group: 'ㅁ' },
+            { hangul: '뫼', group: 'ㅁ' }, { hangul: '뮈', group: 'ㅁ' }, { hangul: '믜', group: 'ㅁ' },
+
+            // ㅈ 行
+            { hangul: '자', group: 'ㅈ' }, { hangul: '저', group: 'ㅈ' }, { hangul: '조', group: 'ㅈ' },
+            { hangul: '주', group: 'ㅈ' }, { hangul: '지', group: 'ㅈ' }, { hangul: '즈', group: 'ㅈ' },
+            { hangul: '재', group: 'ㅈ' }, { hangul: '제', group: 'ㅈ' }, { hangul: '쟈', group: 'ㅈ' },
+            { hangul: '져', group: 'ㅈ' }, { hangul: '죠', group: 'ㅈ' }, { hangul: '쥬', group: 'ㅈ' },
+            { hangul: '쟤', group: 'ㅈ' }, { hangul: '졔', group: 'ㅈ' }, { hangul: '좌', group: 'ㅈ' },
+            { hangul: '줘', group: 'ㅈ' }, { hangul: '좨', group: 'ㅈ' }, { hangul: '줴', group: 'ㅈ' },
+            { hangul: '죄', group: 'ㅈ' }, { hangul: '쥐', group: 'ㅈ' }, { hangul: '즤', group: 'ㅈ' },
+
+            // ㅊ 行
+            { hangul: '차', group: 'ㅊ' }, { hangul: '처', group: 'ㅊ' }, { hangul: '초', group: 'ㅊ' },
+            { hangul: '추', group: 'ㅊ' }, { hangul: '치', group: 'ㅊ' }, { hangul: '츠', group: 'ㅊ' },
+            { hangul: '채', group: 'ㅊ' }, { hangul: '체', group: 'ㅊ' }, { hangul: '챠', group: 'ㅊ' },
+            { hangul: '쳐', group: 'ㅊ' }, { hangul: '쵸', group: 'ㅊ' }, { hangul: '츄', group: 'ㅊ' },
+            { hangul: '챼', group: 'ㅊ' }, { hangul: '쳬', group: 'ㅊ' }, { hangul: '촤', group: 'ㅊ' },
+            { hangul: '춰', group: 'ㅊ' }, { hangul: '쵀', group: 'ㅊ' }, { hangul: '췌', group: 'ㅊ' },
+            { hangul: '최', group: 'ㅊ' }, { hangul: '취', group: 'ㅊ' }, { hangul: '츼', group: 'ㅊ' },
+
+            // ㅉ 行
+            { hangul: '짜', group: 'ㅉ' }, { hangul: '쩌', group: 'ㅉ' }, { hangul: '쪼', group: 'ㅉ' },
+            { hangul: '쭈', group: 'ㅉ' }, { hangul: '찌', group: 'ㅉ' }, { hangul: '쯔', group: 'ㅉ' },
+            { hangul: '째', group: 'ㅉ' }, { hangul: '쩨', group: 'ㅉ' }, { hangul: '쨔', group: 'ㅉ' },
+            { hangul: '쪄', group: 'ㅉ' }, { hangul: '쬬', group: 'ㅉ' }, { hangul: '쮸', group: 'ㅉ' },
+            { hangul: '쨰', group: 'ㅉ' }, { hangul: '쪠', group: 'ㅉ' }, { hangul: '쫘', group: 'ㅉ' },
+            { hangul: '쭤', group: 'ㅉ' }, { hangul: '쫴', group: 'ㅉ' }, { hangul: '쮀', group: 'ㅉ' },
+            { hangul: '쬐', group: 'ㅉ' }, { hangul: '쮜', group: 'ㅉ' }, { hangul: '쯰', group: 'ㅉ' },
+
+            // ㅅ 行
+            { hangul: '사', group: 'ㅅ' }, { hangul: '서', group: 'ㅅ' }, { hangul: '소', group: 'ㅅ' },
+            { hangul: '수', group: 'ㅅ' }, { hangul: '시', group: 'ㅅ' }, { hangul: '스', group: 'ㅅ' },
+            { hangul: '새', group: 'ㅅ' }, { hangul: '세', group: 'ㅅ' }, { hangul: '샤', group: 'ㅅ' },
+            { hangul: '셔', group: 'ㅅ' }, { hangul: '쇼', group: 'ㅅ' }, { hangul: '슈', group: 'ㅅ' },
+            { hangul: '섀', group: 'ㅅ' }, { hangul: '셰', group: 'ㅅ' }, { hangul: '솨', group: 'ㅅ' },
+            { hangul: '숴', group: 'ㅅ' }, { hangul: '쇄', group: 'ㅅ' }, { hangul: '쉐', group: 'ㅅ' },
+            { hangul: '쇠', group: 'ㅅ' }, { hangul: '쉬', group: 'ㅅ' }, { hangul: '싀', group: 'ㅅ' },
+
+            // ㅆ 行
+            { hangul: '싸', group: 'ㅆ' }, { hangul: '써', group: 'ㅆ' }, { hangul: '쏘', group: 'ㅆ' },
+            { hangul: '쑤', group: 'ㅆ' }, { hangul: '씨', group: 'ㅆ' }, { hangul: '쓰', group: 'ㅆ' },
+            { hangul: '쌔', group: 'ㅆ' }, { hangul: '쎄', group: 'ㅆ' }, { hangul: '쌰', group: 'ㅆ' },
+            { hangul: '쎠', group: 'ㅆ' }, { hangul: '쑈', group: 'ㅆ' }, { hangul: '쓔', group: 'ㅆ' },
+            { hangul: '썌', group: 'ㅆ' }, { hangul: '쎼', group: 'ㅆ' }, { hangul: '쏴', group: 'ㅆ' },
+            { hangul: '쒀', group: 'ㅆ' }, { hangul: '쐐', group: 'ㅆ' }, { hangul: '쒜', group: 'ㅆ' },
+            { hangul: '쐬', group: 'ㅆ' }, { hangul: '쒸', group: 'ㅆ' }, { hangul: '씌', group: 'ㅆ' },
+
+            // ㅎ 行
+            { hangul: '하', group: 'ㅎ' }, { hangul: '허', group: 'ㅎ' }, { hangul: '호', group: 'ㅎ' },
+            { hangul: '후', group: 'ㅎ' }, { hangul: '히', group: 'ㅎ' }, { hangul: '흐', group: 'ㅎ' },
+            { hangul: '해', group: 'ㅎ' }, { hangul: '헤', group: 'ㅎ' }, { hangul: '햐', group: 'ㅎ' },
+            { hangul: '혀', group: 'ㅎ' }, { hangul: '효', group: 'ㅎ' }, { hangul: '휴', group: 'ㅎ' },
+            { hangul: '햬', group: 'ㅎ' }, { hangul: '혜', group: 'ㅎ' }, { hangul: '화', group: 'ㅎ' },
+            { hangul: '훠', group: 'ㅎ' }, { hangul: '홰', group: 'ㅎ' }, { hangul: '훼', group: 'ㅎ' },
+            { hangul: '회', group: 'ㅎ' }, { hangul: '휘', group: 'ㅎ' }, { hangul: '희', group: 'ㅎ' },
+
+            // ㅇ 行
+            { hangul: '아', group: 'ㅇ' }, { hangul: '어', group: 'ㅇ' }, { hangul: '오', group: 'ㅇ' },
+            { hangul: '우', group: 'ㅇ' }, { hangul: '이', group: 'ㅇ' }, { hangul: '으', group: 'ㅇ' },
+            { hangul: '애', group: 'ㅇ' }, { hangul: '에', group: 'ㅇ' }, { hangul: '야', group: 'ㅇ' },
+            { hangul: '여', group: 'ㅇ' }, { hangul: '요', group: 'ㅇ' }, { hangul: '유', group: 'ㅇ' },
+            { hangul: '얘', group: 'ㅇ' }, { hangul: '예', group: 'ㅇ' }, { hangul: '와', group: 'ㅇ' },
+            { hangul: '워', group: 'ㅇ' }, { hangul: '왜', group: 'ㅇ' }, { hangul: '웨', group: 'ㅇ' },
+            { hangul: '외', group: 'ㅇ' }, { hangul: '위', group: 'ㅇ' }, { hangul: '의', group: 'ㅇ' }
+        ];
+
+
+        // ============================================================
+        // 闪卡逻辑
+        // ============================================================
+        let items = [...PRONUNCIATION_DATA];
+        let currentItem = null;
+        let currentIndex = 0;
+        let isFlipped = false;
+        let masteredCount = 0;
+        let masteredSet = new Set();
+
+        const flashcard = document.getElementById('flashcard');
+        const frontMain = document.getElementById('frontMain');
+        const frontHint = document.getElementById('frontHint');
+        const backMain = document.getElementById('backMain');
+        const backHint = document.getElementById('backHint');
+        const groupBadge = document.getElementById('groupBadge');
+
+        const flipBtn = document.getElementById('flipBtn');
+        const flipBackBtn = document.getElementById('flipBackBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const masterBtn = document.getElementById('masterBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const learnedCountEl = document.getElementById('learnedCount');
+        const masteredCountEl = document.getElementById('masteredCount');
+        const totalCountEl = document.getElementById('totalCount');
+        const progressText = document.getElementById('progressText');
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function getRandomItem() {
+            const unmastered = items.filter((_, idx) => !masteredSet.has(idx));
+            if (unmastered.length > 0) {
+                const randomIdx = Math.floor(Math.random() * unmastered.length);
+                const item = unmastered[randomIdx];
+                const originalIdx = items.indexOf(item);
+                return { item, index: originalIdx };
+            } else {
+                const idx = Math.floor(Math.random() * items.length);
+                return { item: items[idx], index: idx };
+            }
+        }
+
+        function showCard(item, index) {
+            if (!item) {
+                const random = getRandomItem();
+                item = random.item;
+                index = random.index;
+            }
+            currentItem = item;
+            currentIndex = index;
+
+            frontMain.textContent = item.hangul;
+            backMain.textContent = '❓';
+            frontHint.textContent = '👆 点击翻转';
+            backHint.textContent = '👆 点击翻转返回';
+            groupBadge.textContent = item.group + ' 行';
+
+            isFlipped = false;
+            flashcard.classList.remove('flipped');
+
+            updateStats();
+        }
+
+        function showRandomCard() {
+            const result = getRandomItem();
+            showCard(result.item, result.index);
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            flashcard.classList.toggle('flipped');
+        }
+
+        function handleMastered() {
+            if (!currentItem) return;
+            const idx = currentIndex;
+            if (masteredSet.has(idx)) {
+                masteredSet.delete(idx);
+                masteredCount--;
+                masterBtn.textContent = '✅ 已掌握';
+                masterBtn.style.background = '#2e7d5e';
+            } else {
+                masteredSet.add(idx);
+                masteredCount++;
+                masterBtn.textContent = '✅ 已掌握 ✓';
+                masterBtn.style.background = '#1a5a3e';
+            }
+            updateStats();
+            setTimeout(() => {
+                masterBtn.textContent = '✅ 已掌握';
+                masterBtn.style.background = '#2e7d5e';
+            }, 600);
+        }
+
+        function updateStats() {
+            const learned = items.length - (items.filter((_, idx) => !masteredSet.has(idx)).length);
+            const total = items.length;
+
+            learnedCountEl.textContent = learned;
+            masteredCountEl.textContent = masteredCount;
+            totalCountEl.textContent = total;
+
+            const pct = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+            const remaining = total - masteredCount;
+
+            if (remaining === 0) {
+                progressText.textContent = '🎉 全部掌握！点击「重置」重新开始';
+            } else {
+                progressText.textContent = `📖 剩余 ${remaining} 个未掌握 · 掌握率 ${pct}%`;
+            }
+        }
+
+        function resetAll() {
+            masteredSet.clear();
+            masteredCount = 0;
+            updateStats();
+            showRandomCard();
+            progressText.textContent = '🔄 已重置，重新开始练习！';
+            setTimeout(() => {
+                const remaining = items.length - masteredCount;
+                progressText.textContent = `📖 剩余 ${remaining} 个未掌握 · 掌握率 0%`;
+            }, 1200);
+        }
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        function init() {
+            shuffleArray(items);
+            totalCountEl.textContent = items.length;
+            showRandomCard();
+            updateStats();
+
+            flipBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                flipCard();
+            });
+            flipBackBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                flipCard();
+            });
+            flashcard.addEventListener('click', function(e) {
+                if (e.target.closest('.action-row')) return;
+                flipCard();
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (isFlipped) flipCard();
+                setTimeout(showRandomCard, 150);
+            });
+
+            masterBtn.addEventListener('click', function() {
+                handleMastered();
+            });
+
+            resetBtn.addEventListener('click', function() {
+                if (confirm('确定要重置所有进度吗？')) {
+                    resetAll();
+                }
+            });
+
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    flipCard();
+                }
+                if (e.key === 'n' || e.key === 'N') {
+                    if (isFlipped) flipCard();
+                    setTimeout(showRandomCard, 150);
+                }
+                if (e.key === 'm' || e.key === 'M') {
+                    handleMastered();
+                }
+            });
+
+            console.log('✅ 韩语发音练习 (全音节) 已启动');
+            console.log('📊 总音节数:', items.length);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
