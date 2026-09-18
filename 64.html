@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>韩语闯关 · 闪卡翻译</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Noto Sans KR', Roboto, system-ui, sans-serif;
+            background: linear-gradient(145deg, #2b2d42 0%, #1d1f2c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            border-radius: 48px;
+            padding: 24px;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.6), inset 0 0 1px rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .level-nav {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        .level-btn {
+            background: #252a3a;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #a7b0c0;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #0f1118, 0 8px 16px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s ease;
+            flex: 1;
+            max-width: 220px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .level-btn.active {
+            background: #4c6ef5;
+            color: white;
+            box-shadow: 0 6px 0 #2c3e9e, 0 8px 16px #1a1f3a;
+            transform: translateY(-2px);
+        }
+
+        .level-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #0f1118;
+        }
+
+        .card-area {
+            background: #1b1e2b;
+            border-radius: 40px;
+            padding: 28px 20px 20px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 12px 24px rgba(0, 0, 0, 0.6);
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* ========== 第一关 闪卡 ========== */
+        .flashcard-wrapper {
+            perspective: 1200px;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .flashcard {
+            position: relative;
+            width: 100%;
+            min-height: 320px;
+            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            border-radius: 36px;
+            box-shadow: 0 18px 30px -8px black;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            min-height: 320px;
+            backface-visibility: hidden;
+            border-radius: 36px;
+            padding: 28px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #212536;
+            background-image: radial-gradient(circle at 20% 30%, #2e3348, #191c28);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .card-front {
+            transform: rotateY(0deg);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #1e212f;
+            background-image: radial-gradient(circle at 80% 20%, #2f354a, #14161f);
+        }
+
+        .prompt-ko {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: #f0e9d8;
+            text-shadow: 0 6px 0 #0b0d12, 0 12px 20px black;
+            letter-spacing: 4px;
+            line-height: 1.3;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .prompt-zh {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #bac8ff;
+            text-shadow: 0 6px 0 #0b0d12, 0 12px 20px black;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .prompt-audio {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .prompt-audio .big-icon {
+            font-size: 6rem;
+            filter: drop-shadow(0 10px 6px black);
+            animation: pulse 1.4s infinite ease-in-out;
+        }
+
+        .prompt-audio .audio-label {
+            font-size: 1.3rem;
+            color: #8f9bb3;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: #1a1d29;
+            padding: 10px 26px;
+            border-radius: 50px;
+            border: 1px solid #3b4259;
+            box-shadow: inset 0 2px 6px black;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.12); opacity: 1; }
+        }
+
+        .answer-ko {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: #f0e9d8;
+            text-shadow: 0 6px 0 #0b0d12, 0 12px 20px black;
+            letter-spacing: 3px;
+            line-height: 1.3;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .answer-zh {
+            font-size: 2.4rem;
+            font-weight: 600;
+            color: #bac8ff;
+            text-shadow: 0 3px 0 #0b0d12;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .hint {
+            color: #8f9bb3;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        .type-badge {
+            position: absolute;
+            top: 18px;
+            right: 24px;
+            background: #2b3143;
+            color: #96a0b5;
+            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 30px;
+            letter-spacing: 1px;
+            border: 1px solid #4a5169;
+        }
+
+        /* ========== 第二关 翻译题 ========== */
+        .translation-wrapper {
+            perspective: 1200px;
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .translation-card {
+            position: relative;
+            width: 100%;
+            min-height: 440px;
+            transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            border-radius: 36px;
+            box-shadow: 0 18px 30px -8px black;
+        }
+
+        .translation-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .translation-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            min-height: 440px;
+            backface-visibility: hidden;
+            border-radius: 36px;
+            padding: 30px 26px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #212536;
+            background-image: radial-gradient(circle at 20% 30%, #2e3348, #191c28);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .translation-front {
+            transform: rotateY(0deg);
+        }
+
+        .translation-back {
+            transform: rotateY(180deg);
+            background: #1e212f;
+            background-image: radial-gradient(circle at 80% 20%, #2f354a, #14161f);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .translation-words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .translation-word {
+            background: #4c6ef5;
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 700;
+            padding: 12px 26px;
+            border-radius: 100px;
+            box-shadow: 0 6px 0 #2639a3, 0 8px 16px black;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 0 #1a237e;
+        }
+
+        .translation-direction {
+            font-size: 0.95rem;
+            color: #8f9bb3;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 16px;
+            background: #1a1d29;
+            padding: 8px 22px;
+            border-radius: 40px;
+            display: inline-block;
+            align-self: center;
+            border: 1px solid #3b4259;
+        }
+
+        .translation-prompt {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e6e9f0;
+            text-align: center;
+            line-height: 1.8;
+            padding: 22px 20px;
+            background: #13161f;
+            border-radius: 28px;
+            border: 1px solid #3b4259;
+            box-shadow: inset 0 0 16px #05070c;
+            word-break: keep-all;
+        }
+
+        .translation-prompt .example-ko {
+            font-size: 1.7rem;
+            color: #f0e9d8;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 0 #0b0d12;
+        }
+
+        .translation-prompt .example-zh {
+            font-size: 1.4rem;
+            color: #bac8ff;
+            display: block;
+            margin-top: 10px;
+            line-height: 1.9;
+        }
+
+        .translation-answer {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #f0e9d8;
+            text-align: center;
+            line-height: 1.7;
+            padding: 24px 18px;
+            background: #13161f;
+            border-radius: 28px;
+            border: 1px solid #4c5670;
+            box-shadow: inset 0 0 20px #05070c;
+            word-break: keep-all;
+            text-shadow: 0 3px 0 #0b0d12;
+        }
+
+        .translation-answer-label {
+            font-size: 1rem;
+            color: #8f9bb3;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            background: #1a1d29;
+            padding: 8px 22px;
+            border-radius: 40px;
+            display: inline-block;
+            border: 1px solid #3b4259;
+        }
+
+        /* 共用按钮 */
+        .center {
+            text-align: center;
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #3f465c;
+            color: #96a0b5;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #2e3348;
+            color: white;
+        }
+
+        .correction-badge {
+            background: #1e3a2e;
+            color: #9ae6b4;
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 14px;
+            text-align: center;
+            border-left: 6px solid #37b24d;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress-info {
+            text-align: center;
+            color: #8f9bb3;
+            font-size: 0.95rem;
+            margin-top: 18px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="level-nav">
+        <button class="level-btn active" id="level1Btn">📇 第一关 · 闪卡</button>
+        <button class="level-btn" id="level2Btn">🌐 第二关 · 翻译</button>
+    </div>
+
+    <!-- 第一关 闪卡区域 -->
+    <div id="level1Panel" class="card-area">
+        <div class="correction-badge">
+            ✅ 单词已校对 · 闪卡随机出现：韩语 / 中文 / 纯语音
+        </div>
+        <div class="flashcard-wrapper" id="flashcardWrapper">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front" id="cardFront">
+                    <div class="type-badge" id="typeBadge">韩语</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="answer-ko" id="answerKo">선정하다</div>
+                    <div class="answer-zh" id="answerZh">选定</div>
+                    <div class="hint">点击返回正面</div>
+                </div>
+            </div>
+        </div>
+        <div class="center" style="margin-top: 20px;">
+            <button class="reset-btn" id="resetFlashcardBtn">🔄 重新开始闪卡</button>
+            <button class="reset-btn" id="nextCardBtn" style="margin-left: 12px;">⏩ 下一张</button>
+        </div>
+    </div>
+
+    <!-- 第二关 翻译区域 -->
+    <div id="level2Panel" class="card-area hidden">
+        <div class="correction-badge">
+            🌐 翻译练习 · 韩→中 给例句 / 中→韩 长句翻译
+        </div>
+        <div class="translation-wrapper" id="translationWrapper">
+            <div class="translation-card" id="translationCard">
+                <!-- 正面 -->
+                <div class="translation-face translation-front" id="translationFront">
+                    <div class="translation-words" id="translationWords"></div>
+                    <div class="translation-direction" id="translationDirection">翻译成中文</div>
+                    <div class="translation-prompt" id="translationPrompt"></div>
+                    <div class="hint">点击卡片查看答案</div>
+                </div>
+                <!-- 反面 -->
+                <div class="translation-face translation-back">
+                    <div class="translation-answer-label">正确答案</div>
+                    <div class="translation-answer" id="translationAnswer"></div>
+                    <div class="hint">点击返回正面</div>
+                </div>
+            </div>
+        </div>
+        <div class="center" style="margin-top: 20px;">
+            <button class="reset-btn" id="resetTranslationBtn">🔄 重新开始翻译</button>
+            <button class="reset-btn" id="nextTranslationBtn" style="margin-left: 12px;">⏩ 下一题</button>
+        </div>
+        <div class="progress-info" id="translationProgress"></div>
+    </div>
+</div>
+
+<script>
+    // ==================== 校对后的单词表 ====================
+    const wordPairs = [
+        { ko: '선정하다', zh: '选定' },
+        { ko: '수월해지다', zh: '变得轻松' },
+        { ko: '취재', zh: '采访' },
+        { ko: '브랜드', zh: '品牌' },
+        { ko: '심다', zh: '种，栽' },
+        { ko: '경계선', zh: '分界线' },
+        { ko: '고대 문자', zh: '古文字' },
+        { ko: '개론', zh: '概论' },
+        { ko: '과열되다', zh: '过热' },
+        { ko: '개방', zh: '开放' },
+        { ko: '차례', zh: '回，次' },
+        { ko: '불상사', zh: '不幸事故' },
+        { ko: '색다르다', zh: '特殊的' },
+        { ko: '증상', zh: '症状' },
+        { ko: '설정하다', zh: '设定' },
+        { ko: '먹잇감', zh: '饲料' },
+        { ko: '땅', zh: '土地' },
+        { ko: '몰다', zh: '赶，驾驶，骑，集拢视为' },
+        { ko: '사냥하다', zh: '捕猎' },
+        { ko: '동작', zh: '动作' },
+        { ko: '망치다', zh: '搞砸' },
+        { ko: '내비게이션', zh: '导航' },
+        { ko: '이미지', zh: '形象' },
+        { ko: '긋다', zh: '画，记账，暂避，暂停' },
+        { ko: '의존하다', zh: '依赖' },
+        { ko: '친목', zh: '亲睦' },
+        { ko: '원활하다', zh: '顺利进行' },
+        { ko: '추락', zh: '坠落' },
+        { ko: '송년회', zh: '年会' },
+        { ko: '무너지다', zh: '倒塌' },
+        { ko: '목숨', zh: '生命' },
+        { ko: '착성', zh: '制定' },
+        { ko: '해석하다', zh: '解释' },
+        { ko: '승객', zh: '乘客' },
+        { ko: '남기다', zh: '留下' },
+        { ko: '비교적', zh: '相对' },
+        { ko: '건지다', zh: '打捞，救回' },
+        { ko: '이벤트', zh: '活动' },
+        { ko: '수정하다', zh: '修正' },
+        { ko: '침묵', zh: '沉默' },
+        { ko: '성향', zh: '倾向' },
+        { ko: '날개', zh: '翅膀，风扇叶片' },
+        { ko: '깨다', zh: '打破' },
+        { ko: '분석하다', zh: '分析' },
+        { ko: '명명되다', zh: '被命名' },
+        { ko: '부인', zh: '否认' },
+        { ko: '지정하다', zh: '指定' },
+        { ko: '앞장서다', zh: '领头' },
+        { ko: '귀환하다', zh: '归还' },
+        { ko: '화제', zh: '话题' },
+        { ko: '가로', zh: '横向' },
+        { ko: '기르다', zh: '培养' },
+        { ko: '소방관', zh: '消防员' },
+        { ko: '세로', zh: '竖向' },
+        { ko: '단위', zh: '单位' },
+        { ko: '전공을 살리다', zh: '活用专业' },
+        { ko: '비유하다', zh: '比喻' },
+        { ko: '실천', zh: '实行' },
+        { ko: '희생정신', zh: '牺牲精神' },
+        { ko: '차량', zh: '车辆' },
+        { ko: '달성하다', zh: '达成' },
+        { ko: '시각', zh: '视角' },
+        { ko: '특정', zh: '特定' },
+        { ko: '무지개', zh: '彩虹' },
+        { ko: '권장하다', zh: '提倡' },
+        { ko: '집중하다', zh: '集中' },
+        { ko: '굴절되다', zh: '弯曲，折射' },
+        { ko: '하긴', zh: '没错' },
+        { ko: '분산하다', zh: '分散' },
+        { ko: '섞다', zh: '混合' },
+        { ko: '요약본', zh: '摘要' },
+        { ko: '단기적', zh: '短期的' },
+        { ko: '목돈', zh: '大笔钱' },
+        { ko: '측정하다', zh: '测量' },
+        { ko: '장비', zh: '设备' },
+        { ko: '은퇴', zh: '退休' },
+        { ko: '충족하다', zh: '满足' },
+        { ko: '더해지다', zh: '加上' },
+        { ko: '유용하다', zh: '有用' },
+        { ko: '정밀하다', zh: '精密' },
+        { ko: '궁중', zh: '宫廷' },
+        { ko: '효율적', zh: '高效的' },
+        { ko: '첨단', zh: '先进' },
+        { ko: '손상되다', zh: '被损伤' },
+        { ko: '문화재', zh: '文物' }
+    ];
+
+    // ==================== 第一关 闪卡 ====================
+    const flashcard = document.getElementById('flashcard');
+    const cardFront = document.getElementById('cardFront');
+    const answerKo = document.getElementById('answerKo');
+    const answerZh = document.getElementById('answerZh');
+    const flashcardWrapper = document.getElementById('flashcardWrapper');
+    const nextCardBtn = document.getElementById('nextCardBtn');
+    const resetFlashcardBtn = document.getElementById('resetFlashcardBtn');
+
+    const CARD_TYPES = ['ko', 'zh', 'audio'];
+    let currentCardIndex = 0;
+    let cardFlipped = false;
+    let cardOrder = [];
+    let currentCardType = 'ko';
+
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initCardOrder() {
+        cardOrder = shuffleArray(Array.from({ length: wordPairs.length }, (_, i) => i));
+        currentCardIndex = 0;
+    }
+
+    function randomCardType() {
+        return CARD_TYPES[Math.floor(Math.random() * CARD_TYPES.length)];
+    }
+
+    function speakKorean(text) {
+        if (!('speechSynthesis' in window)) {
+            console.warn('浏览器不支持语音合成');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+        utterance.rate = 0.85;
+        utterance.pitch = 1;
+        const voices = window.speechSynthesis.getVoices();
+        const koreanVoice = voices.find(v => v.lang === 'ko-KR' || v.lang.startsWith('ko'));
+        if (koreanVoice) utterance.voice = koreanVoice;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function renderCardFront(type, pair) {
+        cardFront.innerHTML = '';
+        const badge = document.createElement('div');
+        badge.className = 'type-badge';
+        badge.id = 'typeBadge';
+
+        if (type === 'ko') {
+            badge.textContent = '韩语';
+            cardFront.appendChild(badge);
+            const koDiv = document.createElement('div');
+            koDiv.className = 'prompt-ko';
+            koDiv.textContent = pair.ko;
+            cardFront.appendChild(koDiv);
+            const hint = document.createElement('div');
+            hint.className = 'hint';
+            hint.textContent = '点击卡片查看答案';
+            cardFront.appendChild(hint);
+        } else if (type === 'zh') {
+            badge.textContent = '中文';
+            cardFront.appendChild(badge);
+            const zhDiv = document.createElement('div');
+            zhDiv.className = 'prompt-zh';
+            zhDiv.textContent = pair.zh;
+            cardFront.appendChild(zhDiv);
+            const hint = document.createElement('div');
+            hint.className = 'hint';
+            hint.textContent = '点击卡片查看答案';
+            cardFront.appendChild(hint);
+        } else if (type === 'audio') {
+            badge.textContent = '语音';
+            cardFront.appendChild(badge);
+            const audioDiv = document.createElement('div');
+            audioDiv.className = 'prompt-audio';
+            audioDiv.innerHTML = `
+                <div class="big-icon">🔊</div>
+                <div class="audio-label">点击卡片重播</div>
+            `;
+            cardFront.appendChild(audioDiv);
+            setTimeout(() => speakKorean(pair.ko), 150);
+        }
+    }
+
+    function loadCard(index, forceNewType = false) {
+        if (!cardOrder.length) initCardOrder();
+        const actualIndex = cardOrder[index % cardOrder.length];
+        const pair = wordPairs[actualIndex];
+
+        currentCardType = randomCardType();
+
+        answerKo.textContent = pair.ko;
+        answerZh.textContent = pair.zh;
+
+        renderCardFront(currentCardType, pair);
+
+        if (cardFlipped) {
+            flashcard.classList.remove('flipped');
+            cardFlipped = false;
+        }
+    }
+
+    function flipCard() {
+        flashcard.classList.toggle('flipped');
+        cardFlipped = flashcard.classList.contains('flipped');
+        if (!cardFlipped && currentCardType === 'audio') {
+            const actualIndex = cardOrder[currentCardIndex % cardOrder.length];
+            const pair = wordPairs[actualIndex];
+            setTimeout(() => speakKorean(pair.ko), 100);
+        }
+    }
+
+    flashcardWrapper.addEventListener('click', (e) => {
+        if (e.target.closest('.prompt-audio') && currentCardType === 'audio') {
+            e.stopPropagation();
+            const actualIndex = cardOrder[currentCardIndex % cardOrder.length];
+            const pair = wordPairs[actualIndex];
+            speakKorean(pair.ko);
+            return;
+        }
+        flipCard();
+    });
+
+    nextCardBtn.addEventListener('click', () => {
+        currentCardIndex = (currentCardIndex + 1) % wordPairs.length;
+        loadCard(currentCardIndex, true);
+    });
+
+    resetFlashcardBtn.addEventListener('click', () => {
+        initCardOrder();
+        currentCardIndex = 0;
+        loadCard(0, true);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && !e.target.matches('button, input, textarea')) {
+            e.preventDefault();
+            if (document.getElementById('level1Panel').classList.contains('hidden')) return;
+            const actualIndex = cardOrder[currentCardIndex % wordPairs.length];
+            const pair = wordPairs[actualIndex];
+            speakKorean(pair.ko);
+        }
+    });
+
+    // ==================== 第二关 翻译题 ====================
+    // 韩→中：正面给【韩语单词 + 韩语例句】，背面给中文翻译
+    // 中→韩：正面给【韩语单词 + 中文长句】，背面给韩语翻译
+
+    // 韩→中 例句题库
+    const koToZhQuestions = [
+        { words: ['브랜드', '이미지'], koExample: '브랜드의 이미지는 한 번 무너지면 다시 세우기가 매우 어렵기 때문에 평소에 신경을 써서 관리해야 한다.', zhAnswer: '品牌形象一旦崩塌就很难重新树立，所以平时就要用心维护。' },
+        { words: ['선정하다'], koExample: '수많은 후보들 가운데서도 결국 그 작품이 최종 수상작으로 선정되었다는 소식을 듣고 모두가 기뻐했다.', zhAnswer: '在众多候选作品中，最终听到那部作品被选为最终获奖作品的消息，大家都非常高兴。' },
+        { words: ['수월해지다'], koExample: '처음에는 모든 게 막막했지만 선배의 도움을 받고 나서부터는 일이 훨씬 수월해졌다.', zhAnswer: '一开始一切都很迷茫，但得到前辈的帮助之后，事情变得轻松多了。' },
+        { words: ['취재'], koExample: '그 기자는 현장을 직접 찾아가서 취재를 했기 때문에 다른 기사보다 훨씬 생생한 내용을 전할 수 있었다.', zhAnswer: '那位记者亲自到现场采访，所以能够传达出比其他报道生动得多的内容。' },
+        { words: ['심다'], koExample: '할아버지는 마당 한가운데에 나무를 심고 매일 물을 주며 정성스럽게 가꾸셨다.', zhAnswer: '爷爷在院子中央种了一棵树，每天浇水，精心照料。' },
+        { words: ['경계선'], koExample: '두 나라 사이의 경계선은 분명하게 그어져 있지만 실제로 그 선을 넘는 사람들은 끊이지 않는다.', zhAnswer: '两国之间的分界线虽然划得很清楚，但实际上越过那条线的人络绎不绝。' },
+        { words: ['고대 문자'], koExample: '이 고대 문자는 아직 완전히 해독되지 않아서 학자들 사이에서도 해석이 크게 엇갈리고 있다.', zhAnswer: '这种古代文字尚未被完全解读，学者之间的解释也存在很大分歧。' },
+        { words: ['개론'], koExample: '이 책은 한국어학 개론을 다룬 입문서로서 초보자도 쉽게 이해할 수 있도록 구성되어 있다.', zhAnswer: '这本书是讲述韩国语学概论的入门书，结构安排得让初学者也能轻松理解。' },
+        { words: ['과열되다'], koExample: '부동산 시장이 과열되면서 정부는 결국 각종 규제 정책을 내놓을 수밖에 없었다.', zhAnswer: '随着房地产市场过热，政府最终不得不出台各种限制政策。' },
+        { words: ['개방'], koExample: '그 나라는 오랜 폐쇄 정책을 끝내고 문호를 개방하면서 외국인 투자를 적극적으로 유치하기 시작했다.', zhAnswer: '那个国家结束了长期的封闭政策，开放门户，开始积极吸引外国投资。' },
+        { words: ['차례'], koExample: '드디어 내 차례가 되었지만 너무 긴장한 나머지 준비한 대사를 전부 잊어버리고 말았다.', zhAnswer: '终于轮到我了，但因为太紧张，把准备好的台词全忘了。' },
+        { words: ['불상사'], koExample: '행사 도중 예상치 못한 불상사가 발생하는 바람에 모든 일정이 하루 종일 뒤죽박죽이 되었다.', zhAnswer: '活动期间发生了意想不到的不幸事故，导致所有日程一整天都乱成一团。' },
+        { words: ['색다르다'], koExample: '이번 전시회는 기존의 틀을 깨고 색다른 시각으로 접근한 작품들로 구성되어 관람객들의 호평을 받았다.', zhAnswer: '这次展览会打破了原有的框架，由以独特视角创作的作品组成，获得了观众的好评。' },
+        { words: ['증상'], koExample: '감기 증상이 며칠째 계속되어서 결국 병원에 가서 진찰을 받고 약을 처방받았다.', zhAnswer: '感冒症状持续了好几天，最终去医院接受了检查并拿到了处方药。' },
+        { words: ['설정하다'], koExample: '그는 인생의 목표를 분명하게 설정하고 그 목표를 향해 한 걸음씩 나아가기 시작했다.', zhAnswer: '他明确设定了人生目标，并开始朝着那个目标一步一步前进。' },
+        { words: ['먹잇감'], koExample: '사자는 먹잇감을 발견하면 조용히 다가가서 순식간에 덮치는 사냥 방법을 쓴다.', zhAnswer: '狮子发现猎物后，会悄悄靠近，然后瞬间扑上去，使用这种捕猎方法。' },
+        { words: ['땅'], koExample: '비가 오랜만에 내려서 메마른 땅이 조금이나마 촉촉해졌다.', zhAnswer: '久违地下了一场雨，干涸的土地稍微变得湿润了一些。' },
+        { words: ['몰다'], koExample: '목동은 양떼를 초원으로 몰면서 노래를 흥얼거렸다.', zhAnswer: '牧童一边把羊群赶到草原，一边哼着歌。' },
+        { words: ['사냥하다'], koExample: '옛날 사람들은 살기 위해 직접 사냥하고 농사를 지으며 하루하루를 살아갔다.', zhAnswer: '古代人为了生存，亲自捕猎、种地，一天天过着日子。' },
+        { words: ['동작'], koExample: '그 선수는 상대방의 동작을 미리 읽고 순간적으로 몸을 날려 공을 막아냈다.', zhAnswer: '那位选手预判了对方的动作，瞬间飞身挡住了球。' },
+        { words: ['망치다'], koExample: '사소한 실수 하나가 전체 프로젝트를 망칠 수 있다는 사실을 항상 명심해야 한다.', zhAnswer: '必须时刻牢记，一个小小的失误可能会搞砸整个项目。' },
+        { words: ['내비게이션'], koExample: '내비게이션이 알려주는 길로만 가다 보면 가끔은 예상치 못한 풍경을 만날 수 있다.', zhAnswer: '如果只沿着导航指引的路走，有时会遇到意想不到的风景。' },
+        { words: ['긋다'], koExample: '그는 종이 위에 조심스럽게 선을 긋고 그 선을 따라 색을 칠하기 시작했다.', zhAnswer: '他在纸上小心地画了一条线，然后开始沿着那条线涂色。' },
+        { words: ['의존하다'], koExample: '남에게 지나치게 의존하다 보면 스스로 문제를 해결하는 능력을 잃어버리기 쉽다.', zhAnswer: '如果过度依赖别人，很容易丧失自己解决问题的能力。' },
+        { words: ['친목'], koExample: '이 모임은 단순한 친목 도모를 넘어서 서로의 정보를 공유하고 협력하는 자리로 발전했다.', zhAnswer: '这个聚会超越了单纯的亲睦增进，发展成了互相分享信息、开展合作的场合。' },
+        { words: ['원활하다'], koExample: '의사소통이 원활하지 않으면 아무리 좋은 계획도 제대로 실행되기 어렵다.', zhAnswer: '如果沟通不顺畅，再好的计划也难以顺利执行。' },
+        { words: ['추락'], koExample: '경제가 급격히 추락하면서 많은 기업들이 줄줄이 도산하고 실업자가 속출했다.', zhAnswer: '经济急剧坠落，许多企业接连倒闭，失业者层出不穷。' },
+        { words: ['송년회'], koExample: '송년회에서 우리는 한 해 동안 있었던 일들을 되돌아보며 서로를 격려했다.', zhAnswer: '在年会上，我们回顾了一年里发生的事，互相鼓励。' },
+        { words: ['무너지다'], koExample: '오랜 세월을 버텨온 성벽이 결국 지진으로 인해 힘없이 무너지고 말았다.', zhAnswer: '历经漫长岁月的城墙最终因地震而无力地倒塌了。' },
+        { words: ['목숨'], koExample: '그 소방관은 자신의 목숨을 걸고 불길 속에서 아이를 구해냈다.', zhAnswer: '那位消防员冒着生命危险，从火海中救出了孩子。' },
+        { words: ['착성'], koExample: '계약서를 착성하기 전에 모든 조항을 꼼꼼히 확인하는 것이 중요하다.', zhAnswer: '在制定合同书之前，仔细确认所有条款很重要。' },
+        { words: ['해석하다'], koExample: '같은 문장이라도 사람에 따라 전혀 다르게 해석할 수 있다는 점을 잊지 말아야 한다.', zhAnswer: '不能忘记，同一句话根据人的不同，可以解释得完全不同。' },
+        { words: ['승객'], koExample: '갑작스러운 정전으로 지하철이 멈추자 승객들은 불안에 떨며 대피 안내를 기다렸다.', zhAnswer: '突然停电导致地铁停运，乘客们不安地颤抖着等待疏散指引。' },
+        { words: ['남기다'], koExample: '그는 후배들에게 큰 업적을 남기고 조용히 은퇴했다.', zhAnswer: '他给后辈们留下了伟大的业绩，然后安静地退休了。' },
+        { words: ['비교적'], koExample: '이번 시험은 지난번에 비해 비교적 쉬웠다는 반응이 많았다.', zhAnswer: '这次考试比起上次，很多人反应相对容易。' },
+        { words: ['건지다'], koExample: '어부는 거센 파도 속에서도 그물을 건져 올리는 데 성공했다.', zhAnswer: '渔夫在汹涌的波涛中也成功把渔网捞了上来。' },
+        { words: ['이벤트'], koExample: '백화점은 고객 감사 이벤트를 열고 다양한 경품을 준비했다.', zhAnswer: '百货商店举办了顾客感谢活动，准备了各种奖品。' },
+        { words: ['수정하다'], koExample: '보고서를 제출하기 전에 오탈자를 꼼꼼히 수정하는 습관을 들여야 한다.', zhAnswer: '要养成在提交报告前仔细修正错别字的习惯。' },
+        { words: ['침묵'], koExample: '그는 묻는 말에 아무 대답도 없이 긴 침묵을 지켰다.', zhAnswer: '他对问话没有任何回答，保持了长久的沉默。' },
+        { words: ['성향'], koExample: '그는 원래 내성적인 성향이라 사람들 앞에 나서는 것을 별로 좋아하지 않는다.', zhAnswer: '他原本性格内向，不太喜欢在人前出头。' },
+        { words: ['날개'], koExample: '새는 날개를 펼치고 하늘 높이 날아올랐다.', zhAnswer: '鸟儿展开翅膀，飞向了高空。' },
+        { words: ['깨다'], koExample: '동생은 실수로 엄마가 아끼는 그릇을 깨고 울먹였다.', zhAnswer: '弟弟不小心打碎了妈妈珍爱的碗，哭丧着脸。' },
+        { words: ['분석하다'], koExample: '전문가들은 그 사건의 원인을 다각도로 분석한 결과를 발표했다.', zhAnswer: '专家们发表了从多角度分析那起事件原因的结果。' },
+        { words: ['명명되다'], koExample: '그 별은 발견자의 이름을 따서 명명되었다.', zhAnswer: '那颗星星以发现者的名字被命名了。' },
+        { words: ['부인'], koExample: '그는 끝까지 혐의를 부인했지만 결국 증거 앞에 무릎을 꿇었다.', zhAnswer: '他始终否认嫌疑，但最终在证据面前屈服了。' },
+        { words: ['지정하다'], koExample: '정부는 그 지역을 문화재 보호 구역으로 지정했다.', zhAnswer: '政府指定那个地区为文物保护区域。' },
+        { words: ['앞장서다'], koExample: '그는 어려운 상황에서도 항상 앞장서서 솔선수범했다.', zhAnswer: '他在困难的情况下也总是领头以身作则。' },
+        { words: ['귀환하다'], koExample: '우주비행사들은 무사히 지구로 귀환하여 가족들과 감격의 재회를 했다.', zhAnswer: '宇航员们安全归还地球，与家人感人重逢。' },
+        { words: ['화제'], koExample: '그 배우의 결혼 소식이 온라인에서 가장 큰 화제가 되었다.', zhAnswer: '那位演员的结婚消息在网上成了最大的话题。' },
+        { words: ['가로'], koExample: '종이를 가로로 놓고 그림을 그리면 더 넓게 표현할 수 있다.', zhAnswer: '把纸横向放置来画画，可以表现得更宽阔。' },
+        { words: ['기르다'], koExample: '어릴 때부터 독서 습관을 기르는 것이 중요하다.', zhAnswer: '从小培养阅读习惯很重要。' },
+        { words: ['소방관'], koExample: '소방관들은 화재 현장에서 시민들을 안전하게 대피시켰다.', zhAnswer: '消防员们在火灾现场安全地疏散了市民。' },
+        { words: ['세로'], koExample: '그 건물은 세로로 길쭉하게 설계되어 독특한 인상을 준다.', zhAnswer: '那栋建筑被设计得竖向细长，给人独特的印象。' },
+        { words: ['단위'], koExample: '이 도시의 인구는 백만 단위로 계산된다.', zhAnswer: '这座城市的人口以百万为单位计算。' },
+        { words: ['전공을 살리다'], koExample: '그는 전공을 살려서 관련 분야의 회사에 취직했다.', zhAnswer: '他活用专业，在相关领域的公司就了业。' },
+        { words: ['비유하다'], koExample: '시인은 인생을 긴 여행에 비유하여 표현했다.', zhAnswer: '诗人把人生比喻成长途旅行来表达。' },
+        { words: ['실천'], koExample: '아무리 좋은 이론도 실천으로 옮기지 않으면 아무 소용이 없다.', zhAnswer: '再好的理论，如果不付诸实践也毫无用处。' },
+        { words: ['희생정신'], koExample: '그 의사의 희생정신은 많은 사람들에게 깊은 감동을 주었다.', zhAnswer: '那位医生的牺牲精神给了很多人深深的感动。' },
+        { words: ['차량'], koExample: '출근 시간에는 도로에 차량이 너무 많아서 꼼짝도 못 한다.', zhAnswer: '上班时间路上车辆太多，动弹不得。' },
+        { words: ['달성하다'], koExample: '그는 마침내 오랜 꿈이었던 목표를 달성했다.', zhAnswer: '他终于达成了长久以来的梦想目标。' },
+        { words: ['시각'], koExample: '같은 사건을 바라보는 시각이 사람마다 다를 수 있다.', zhAnswer: '看待同一事件的视角可能因人而异。' },
+        { words: ['특정'], koExample: '특정 개인을 겨냥한 비난은 삼가야 한다.', zhAnswer: '应当避免针对特定个人的指责。' },
+        { words: ['무지개'], koExample: '비가 그친 뒤 하늘에 일곱 빛깔 무지개가 떴다.', zhAnswer: '雨停后，天空出现了一道七色彩虹。' },
+        { words: ['권장하다'], koExample: '전문가들은 규칙적인 운동을 권장한다.', zhAnswer: '专家们提倡规律的运动。' },
+        { words: ['집중하다'], koExample: '그는 주변 소음에도 아랑곳하지 않고 공부에 집중했다.', zhAnswer: '他不顾周围的噪音，专注于学习。' },
+        { words: ['굴절되다'], koExample: '빛이 물속으로 들어가면서 굴절되어 보였다.', zhAnswer: '光线进入水中时看起来被折射了。' },
+        { words: ['하긴'], koExample: '하긴, 그렇게 열심히 했는데 결과가 좋을 만도 하지.', zhAnswer: '没错，那么努力，结果好也是理所当然的。' },
+        { words: ['분산하다'], koExample: '위험을 분산하기 위해 여러 곳에 투자하는 것이 바람직하다.', zhAnswer: '为了分散风险，最好在多个地方投资。' },
+        { words: ['섞다'], koExample: '그는 여러 가지 색을 섞어서 아름다운 그림을 완성했다.', zhAnswer: '他把多种颜色混合在一起，完成了美丽的画作。' },
+        { words: ['요약본'], koExample: '보고서 요약본을 먼저 읽고 전체 내용을 파악하는 것이 좋다.', zhAnswer: '先读报告摘要，把握整体内容比较好。' },
+        { words: ['단기적'], koExample: '단기적 이익보다 장기적 발전을 고려해야 한다.', zhAnswer: '应当考虑长期发展，而非短期利益。' },
+        { words: ['목돈'], koExample: '그는 오랜 시간 모은 목돈으로 작은 가게를 열었다.', zhAnswer: '他用长时间攒下的大笔钱开了一家小店。' },
+        { words: ['측정하다'], koExample: '기계를 이용하여 정확하게 온도를 측정했다.', zhAnswer: '利用机器精确地测量了温度。' },
+        { words: ['장비'], koExample: '등산을 하기 전에 필요한 장비를 꼼꼼히 챙겼다.', zhAnswer: '去登山之前，仔细准备好了必要的装备。' },
+        { words: ['은퇴'], koExample: '그는 정년을 채우고 은퇴한 후 고향으로 내려갔다.', zhAnswer: '他服满退休年龄退休后，回到了故乡。' },
+        { words: ['충족하다'], koExample: '그 지원자는 모든 조건을 충족하여 최종 합격했다.', zhAnswer: '那位应聘者满足了所有条件，最终合格了。' },
+        { words: ['더해지다'], koExample: '여기에 또 하나의 문제가 더해져서 상황이 더욱 복잡해졌다.', zhAnswer: '再加上另一个问题，情况变得更加复杂了。' },
+        { words: ['유용하다'], koExample: '이 책은 일상생활에서 매우 유용한 정보를 담고 있다.', zhAnswer: '这本书包含了日常生活中非常有用的信息。' },
+        { words: ['정밀하다'], koExample: '이 시계는 정밀한 기술로 만들어져 오차가 거의 없다.', zhAnswer: '这块表用精密的技术制造，几乎没有误差。' },
+        { words: ['궁중'], koExample: '궁중 문화는 일반 백성들의 생활과는 매우 달랐다.', zhAnswer: '宫廷文化与普通百姓的生活非常不同。' },
+        { words: ['효율적'], koExample: '효율적인 방법으로 일을 처리하면 시간을 절약할 수 있다.', zhAnswer: '用高效的方法处理事情，可以节省时间。' },
+        { words: ['첨단'], koExample: '이 공장은 첨단 기술을 도입하여 생산성을 크게 높였다.', zhAnswer: '这家工厂引进了先进技术，大大提高了生产率。' },
+        { words: ['손상되다'], koExample: '오랜 세월이 지나면서 문화재가 많이 손상되었다.', zhAnswer: '随着漫长岁月的流逝，文物被损伤了很多。' },
+        { words: ['문화재'], koExample: '우리는 소중한 문화재를 잘 보존해야 할 의무가 있다.', zhAnswer: '我们有义务好好保存珍贵的文物。' }
+    ];
+
+    // 中→韩 题目（中文句子已改成长句，答案也是完整韩语句子）
+    const zhToKoQuestions = [
+        { words: ['브랜드', '이미지'], zhPrompt: '品牌形象一旦崩塌，就很难重新树立起来，所以平时就要用心去维护和管理。', koAnswer: '브랜드의 이미지는 한 번 무너지면 다시 세우기가 매우 어렵기 때문에 평소에 신경을 써서 관리해야 한다.' },
+        { words: ['선정하다'], zhPrompt: '在众多候选作品当中，最终那部作品被选定为获奖作品，听到这个消息后大家都非常高兴。', koAnswer: '수많은 후보 작품 가운데서 결국 그 작품이 수상작으로 선정되었다는 소식을 듣고 모두가 매우 기뻐했다.' },
+        { words: ['수월해지다'], zhPrompt: '一开始什么事情都觉得很茫然，但得到前辈的帮助之后，工作就变得轻松多了。', koAnswer: '처음에는 모든 일이 막막했지만 선배의 도움을 받고 나서부터는 일이 훨씬 수월해졌다.' },
+        { words: ['취재'], zhPrompt: '那位记者因为亲自到现场进行了采访，所以能够比别的报道传达出更加生动的内容。', koAnswer: '그 기자는 현장을 직접 찾아가서 취재를 했기 때문에 다른 기사보다 훨씬 생생한 내용을 전할 수 있었다.' },
+        { words: ['심다'], zhPrompt: '爷爷在院子正中央种了一棵树，每天给它浇水，精心地照料着它。', koAnswer: '할아버지는 마당 한가운데에 나무를 심고 매일 물을 주며 정성스럽게 가꾸셨다.' },
+        { words: ['경계선'], zhPrompt: '两国之间的分界线虽然划得很清楚，但实际上越过那条线的人却络绎不绝。', koAnswer: '두 나라 사이의 경계선은 분명하게 그어져 있지만 실제로 그 선을 넘는 사람들은 끊이지 않는다.' },
+        { words: ['고대 문자'], zhPrompt: '这种古代文字至今还没有被完全解读出来，所以学者们之间的解释也存在很大的分歧。', koAnswer: '이 고대 문자는 아직 완전히 해독되지 않아서 학자들 사이에서도 해석이 크게 엇갈리고 있다.' },
+        { words: ['개론'], zhPrompt: '这本书是讲述韩国语学概论的入门书，内容编排得让初学者也能轻松理解。', koAnswer: '이 책은 한국어학 개론을 다룬 입문서로서 초보자도 쉽게 이해할 수 있도록 구성되어 있다.' },
+        { words: ['과열되다'], zhPrompt: '随着房地产市场不断过热，政府最终不得不出台各种各样的限制政策。', koAnswer: '부동산 시장이 과열되면서 정부는 결국 각종 규제 정책을 내놓을 수밖에 없었다.' },
+        { words: ['개방'], zhPrompt: '那个国家结束了长期的封闭政策，开放了门户，并开始积极吸引外国投资。', koAnswer: '그 나라는 오랜 폐쇄 정책을 끝내고 문호를 개방하면서 외국인 투자를 적극적으로 유치하기 시작했다.' },
+        { words: ['차례'], zhPrompt: '终于轮到我了，但因为实在太紧张，把准备好的台词全都忘得一干二净。', koAnswer: '드디어 내 차례가 되었지만 너무 긴장한 나머지 준비한 대사를 전부 잊어버리고 말았다.' },
+        { words: ['불상사'], zhPrompt: '活动进行当中发生了意想不到的不幸事故，结果所有日程一整天都乱成了一团。', koAnswer: '행사 도중 예상치 못한 불상사가 발생하는 바람에 모든 일정이 하루 종일 뒤죽박죽이 되었다.' },
+        { words: ['색다르다'], zhPrompt: '这次展览会打破了原有的框架，由以独特视角创作的作品组成，因此获得了观众们的好评。', koAnswer: '이번 전시회는 기존의 틀을 깨고 색다른 시각으로 접근한 작품들로 구성되어 관람객들의 호평을 받았다.' },
+        { words: ['증상'], zhPrompt: '感冒的症状持续了好几天，最后还是去了医院接受检查，并拿到了处方药。', koAnswer: '감기 증상이 며칠째 계속되어서 결국 병원에 가서 진찰을 받고 약을 처방받았다.' },
+        { words: ['설정하다'], zhPrompt: '他明确地设定了人生的目标，并开始朝着那个目标一步一步地向前迈进。', koAnswer: '그는 인생의 목표를 분명하게 설정하고 그 목표를 향해 한 걸음씩 나아가기 시작했다.' },
+        { words: ['먹잇감'], zhPrompt: '狮子一旦发现猎物，就会悄悄地靠近，然后在一瞬间扑上去，使用这种捕猎方法。', koAnswer: '사자는 먹잇감을 발견하면 조용히 다가가서 순식간에 덮치는 사냥 방법을 쓴다.' },
+        { words: ['땅'], zhPrompt: '久违地下了一场雨，干涸的土地哪怕只是一点点，也变得湿润了一些。', koAnswer: '비가 오랜만에 내려서 메마른 땅이 조금이나마 촉촉해졌다.' },
+        { words: ['몰다'], zhPrompt: '牧童一边把羊群赶到草原上去，一边嘴里哼着歌。', koAnswer: '목동은 양떼를 초원으로 몰면서 노래를 흥얼거렸다.' },
+        { words: ['사냥하다'], zhPrompt: '古代的人们为了生存下去，亲自捕猎、种地，就这样一天一天地生活着。', koAnswer: '옛날 사람들은 살기 위해 직접 사냥하고 농사를 지으며 하루하루를 살아갔다.' },
+        { words: ['동작'], zhPrompt: '那位选手提前读懂了对方的动作，瞬间飞身而出，把球挡了下来。', koAnswer: '그 선수는 상대방의 동작을 미리 읽고 순간적으로 몸을 날려 공을 막아냈다.' },
+        { words: ['망치다'], zhPrompt: '必须时刻牢记，一个很小的失误就有可能把整个项目都搞砸。', koAnswer: '사소한 실수 하나가 전체 프로젝트를 망칠 수 있다는 사실을 항상 명심해야 한다.' },
+        { words: ['내비게이션'], zhPrompt: '如果只沿着导航所指引的道路一直走下去，有时候反而会遇到意想不到的风景。', koAnswer: '내비게이션이 알려주는 길로만 가다 보면 가끔은 예상치 못한 풍경을 만날 수 있다.' },
+        { words: ['긋다'], zhPrompt: '他在纸上小心翼翼地画了一条线，然后开始沿着那条线涂上颜色。', koAnswer: '그는 종이 위에 조심스럽게 선을 긋고 그 선을 따라 색을 칠하기 시작했다.' },
+        { words: ['의존하다'], zhPrompt: '如果过分依赖别人，就很容易丧失自己独立解决问题的能力。', koAnswer: '남에게 지나치게 의존하다 보면 스스로 문제를 해결하는 능력을 잃어버리기 쉽다.' },
+        { words: ['친목'], zhPrompt: '这个聚会已经超越了单纯的增进亲睦，发展成了互相分享信息、开展合作的场合。', koAnswer: '이 모임은 단순한 친목 도모를 넘어서 서로의 정보를 공유하고 협력하는 자리로 발전했다.' },
+        { words: ['원활하다'], zhPrompt: '如果沟通不顺畅，那么再好的计划也很难顺利地执行下去。', koAnswer: '의사소통이 원활하지 않으면 아무리 좋은 계획도 제대로 실행되기 어렵다.' },
+        { words: ['추락'], zhPrompt: '随着经济急剧坠落，许多企业接连倒闭，失业者也不断涌现出来。', koAnswer: '경제가 급격히 추락하면서 많은 기업들이 줄줄이 도산하고 실업자가 속출했다.' },
+        { words: ['송년회'], zhPrompt: '在年会上，我们回顾了过去一年里所发生的事情，并且互相鼓励。', koAnswer: '송년회에서 우리는 한 해 동안 있었던 일들을 되돌아보며 서로를 격려했다.' },
+        { words: ['무너지다'], zhPrompt: '历经漫长岁月支撑下来的城墙，最终因为地震而无力地倒塌了。', koAnswer: '오랜 세월을 버텨온 성벽이 결국 지진으로 인해 힘없이 무너지고 말았다.' },
+        { words: ['목숨'], zhPrompt: '那位消防员冒着生命危险，从熊熊燃烧的火海当中把孩子救了出来。', koAnswer: '그 소방관은 자신의 목숨을 걸고 불길 속에서 아이를 구해냈다.' },
+        { words: ['착성'], zhPrompt: '在制定合同书之前，仔细确认所有的条款是一件非常重要的事情。', koAnswer: '계약서를 착성하기 전에 모든 조항을 꼼꼼히 확인하는 것이 중요하다.' },
+        { words: ['해석하다'], zhPrompt: '不能忘记，即使是同样的一句话，根据人的不同也可以解释得完全不同。', koAnswer: '같은 문장이라도 사람에 따라 전혀 다르게 해석할 수 있다는 점을 잊지 말아야 한다.' },
+        { words: ['승객'], zhPrompt: '因为突然停电导致地铁停了下来，乘客们都不安地颤抖着等待疏散指引。', koAnswer: '갑작스러운 정전으로 지하철이 멈추자 승객들은 불안에 떨며 대피 안내를 기다렸다.' },
+        { words: ['남기다'], zhPrompt: '他给后辈们留下了伟大的业绩，然后安静地退休了。', koAnswer: '그는 후배들에게 큰 업적을 남기고 조용히 은퇴했다.' },
+        { words: ['비교적'], zhPrompt: '这次考试和上一次相比，很多人反映说相对而言比较容易。', koAnswer: '이번 시험은 지난번에 비해 비교적 쉬웠다는 반응이 많았다.' },
+        { words: ['건지다'], zhPrompt: '渔夫即使在汹涌的波涛当中，也成功地把渔网打捞了上来。', koAnswer: '어부는 거센 파도 속에서도 그물을 건져 올리는 데 성공했다.' },
+        { words: ['이벤트'], zhPrompt: '百货商店举办了顾客感谢活动，并且准备了各种各样的奖品。', koAnswer: '백화점은 고객 감사 이벤트를 열고 다양한 경품을 준비했다.' },
+        { words: ['수정하다'], zhPrompt: '要养成在提交报告之前，仔细修正错别字的好习惯。', koAnswer: '보고서를 제출하기 전에 오탈자를 꼼꼼히 수정하는 습관을 들여야 한다.' },
+        { words: ['침묵'], zhPrompt: '他对别人的问话没有做出任何回答，只是保持着长久的沉默。', koAnswer: '그는 묻는 말에 아무 대답도 없이 긴 침묵을 지켰다.' },
+        { words: ['성향'], zhPrompt: '他原本就是内向的性格倾向，所以不太喜欢在人前出头露面。', koAnswer: '그는 원래 내성적인 성향이라 사람들 앞에 나서는 것을 별로 좋아하지 않는다.' },
+        { words: ['날개'], zhPrompt: '鸟儿展开了翅膀，朝着高高的天空飞了上去。', koAnswer: '새는 날개를 펼치고 하늘 높이 날아올랐다.' },
+        { words: ['깨다'], zhPrompt: '弟弟不小心把妈妈珍爱的碗打碎了，于是哭丧着脸。', koAnswer: '동생은 실수로 엄마가 아끼는 그릇을 깨고 울먹였다.' },
+        { words: ['분석하다'], zhPrompt: '专家们发表了从多个角度分析那起事件原因之后所得出的结果。', koAnswer: '전문가들은 그 사건의 원인을 다각도로 분석한 결과를 발표했다.' },
+        { words: ['명명되다'], zhPrompt: '那颗星星是随着发现者的名字而被命名的。', koAnswer: '그 별은 발견자의 이름을 따서 명명되었다.' },
+        { words: ['부인'], zhPrompt: '他直到最后都一直否认嫌疑，但最终还是在证据面前屈服了。', koAnswer: '그는 끝까지 혐의를 부인했지만 결국 증거 앞에 무릎을 꿇었다.' },
+        { words: ['지정하다'], zhPrompt: '政府把那个地区指定为了文物保护区域。', koAnswer: '정부는 그 지역을 문화재 보호 구역으로 지정했다.' },
+        { words: ['앞장서다'], zhPrompt: '他在困难的情况下也总是领头走在前面，以身作则。', koAnswer: '그는 어려운 상황에서도 항상 앞장서서 솔선수범했다.' },
+        { words: ['귀환하다'], zhPrompt: '宇航员们安全地归还到了地球，并且和家人进行了感动的重逢。', koAnswer: '우주비행사들은 무사히 지구로 귀환하여 가족들과 감격의 재회를 했다.' },
+        { words: ['화제'], zhPrompt: '那位演员结婚的消息，在网上成了最大的话题。', koAnswer: '그 배우의 결혼 소식이 온라인에서 가장 큰 화제가 되었다.' },
+        { words: ['가로'], zhPrompt: '把纸横向放置来画画的话，就能够表现得更加宽阔。', koAnswer: '종이를 가로로 놓고 그림을 그리면 더 넓게 표현할 수 있다.' },
+        { words: ['기르다'], zhPrompt: '从很小的时候就开始培养阅读的习惯，这是一件非常重要的事情。', koAnswer: '어릴 때부터 독서 습관을 기르는 것이 중요하다.' },
+        { words: ['소방관'], zhPrompt: '消防员们在火灾现场把市民们安全地疏散了出去。', koAnswer: '소방관들은 화재 현장에서 시민들을 안전하게 대피시켰다.' },
+        { words: ['세로'], zhPrompt: '那栋建筑被设计得竖向细长，因此给人留下了一种独特的印象。', koAnswer: '그 건물은 세로로 길쭉하게 설계되어 독특한 인상을 준다.' },
+        { words: ['단위'], zhPrompt: '这座城市的人口是以百万为单位来进行计算的。', koAnswer: '이 도시의 인구는 백만 단위로 계산된다.' },
+        { words: ['전공을 살리다'], zhPrompt: '他活用自己所学的专业，在相关领域的公司里就了业。', koAnswer: '그는 전공을 살려서 관련 분야의 회사에 취직했다.' },
+        { words: ['비유하다'], zhPrompt: '诗人把人生比喻成了一段漫长的旅行，并以此来加以表达。', koAnswer: '시인은 인생을 긴 여행에 비유하여 표현했다.' },
+        { words: ['실천'], zhPrompt: '无论多么好的理论，如果不付诸实践的话，也是毫无用处的。', koAnswer: '아무리 좋은 이론도 실천으로 옮기지 않으면 아무 소용이 없다.' },
+        { words: ['희생정신'], zhPrompt: '那位医生的牺牲精神，给许许多多的人带来了深深的感动。', koAnswer: '그 의사의 희생정신은 많은 사람들에게 깊은 감동을 주었다.' },
+        { words: ['차량'], zhPrompt: '上班时间路上的车辆实在太多了，简直动弹不得。', koAnswer: '출근 시간에는 도로에 차량이 너무 많아서 꼼짝도 못 한다.' },
+        { words: ['달성하다'], zhPrompt: '他终于达成了长久以来一直梦想着的那个目标。', koAnswer: '그는 마침내 오랜 꿈이었던 목표를 달성했다.' },
+        { words: ['시각'], zhPrompt: '看待同一件事情的视角，可能会因人而有所不同。', koAnswer: '같은 사건을 바라보는 시각이 사람마다 다를 수 있다.' },
+        { words: ['특정'], zhPrompt: '应当尽量避免针对特定个人所进行的指责。', koAnswer: '특정 개인을 겨냥한 비난은 삼가야 한다.' },
+        { words: ['무지개'], zhPrompt: '雨停之后，天空中出现了一道七种颜色的彩虹。', koAnswer: '비가 그친 뒤 하늘에 일곱 빛깔 무지개가 떴다.' },
+        { words: ['권장하다'], zhPrompt: '专家们提倡大家进行有规律的运动。', koAnswer: '전문가들은 규칙적인 운동을 권장한다.' },
+        { words: ['집중하다'], zhPrompt: '他不顾周围的噪音，专注于学习。', koAnswer: '그는 주변 소음에도 아랑곳하지 않고 공부에 집중했다.' },
+        { words: ['굴절되다'], zhPrompt: '光线在进入水中的时候，看起来被折射了。', koAnswer: '빛이 물속으로 들어가면서 굴절되어 보였다.' },
+        { words: ['하긴'], zhPrompt: '没错，既然那么努力了，结果好也是理所当然的。', koAnswer: '하긴, 그렇게 열심히 했는데 결과가 좋을 만도 하지.' },
+        { words: ['분산하다'], zhPrompt: '为了分散风险，最好在多个不同的地方进行投资。', koAnswer: '위험을 분산하기 위해 여러 곳에 투자하는 것이 바람직하다.' },
+        { words: ['섞다'], zhPrompt: '他把好几种颜色混合在了一起，最终完成了一幅美丽的画作。', koAnswer: '그는 여러 가지 색을 섞어서 아름다운 그림을 완성했다.' },
+        { words: ['요약본'], zhPrompt: '先读一遍报告摘要，然后再把握整体内容，这样比较好。', koAnswer: '보고서 요약본을 먼저 읽고 전체 내용을 파악하는 것이 좋다.' },
+        { words: ['단기적'], zhPrompt: '比起短期的利益，更应该考虑长期的发展。', koAnswer: '단기적 이익보다 장기적 발전을 고려해야 한다.' },
+        { words: ['목돈'], zhPrompt: '他用长时间积攒下来的大笔钱，开了一家小小的店铺。', koAnswer: '그는 오랜 시간 모은 목돈으로 작은 가게를 열었다.' },
+        { words: ['측정하다'], zhPrompt: '利用机器精确地测量了温度。', koAnswer: '기계를 이용하여 정확하게 온도를 측정했다.' },
+        { words: ['장비'], zhPrompt: '去登山之前，仔细准备好了必要的装备。', koAnswer: '등산을 하기 전에 필요한 장비를 꼼꼼히 챙겼다.' },
+        { words: ['은퇴'], zhPrompt: '他服满退休年龄退休之后，回到了自己的故乡。', koAnswer: '그는 정년을 채우고 은퇴한 후 고향으로 내려갔다.' },
+        { words: ['충족하다'], zhPrompt: '那位应聘者满足了所有的条件，最终被合格录取了。', koAnswer: '그 지원자는 모든 조건을 충족하여 최종 합격했다.' },
+        { words: ['더해지다'], zhPrompt: '在这里又加上了一个问题，于是情况变得更加复杂了。', koAnswer: '여기에 또 하나의 문제가 더해져서 상황이 더욱 복잡해졌다.' },
+        { words: ['유용하다'], zhPrompt: '这本书里面包含了在日常生活中非常有用的信息。', koAnswer: '이 책은 일상생활에서 매우 유용한 정보를 담고 있다.' },
+        { words: ['정밀하다'], zhPrompt: '这块手表是用精密的技术制造出来的，所以几乎没有误差。', koAnswer: '이 시계는 정밀한 기술로 만들어져 오차가 거의 없다.' },
+        { words: ['궁중'], zhPrompt: '宫廷文化和普通百姓的生活有着非常大的不同。', koAnswer: '궁중 문화는 일반 백성들의 생활과는 매우 달랐다.' },
+        { words: ['효율적'], zhPrompt: '如果用高效的方法来处理事情，就能够节省时间。', koAnswer: '효율적인 방법으로 일을 처리하면 시간을 절약할 수 있다.' },
+        { words: ['첨단'], zhPrompt: '这家工厂引进了先进的技术，从而大大提高了生产率。', koAnswer: '이 공장은 첨단 기술을 도입하여 생산성을 크게 높였다.' },
+        { words: ['손상되다'], zhPrompt: '随着漫长岁月的流逝，文物被损伤了很多。', koAnswer: '오랜 세월이 지나면서 문화재가 많이 손상되었다.' },
+        { words: ['문화재'], zhPrompt: '我们有义务好好地保存珍贵的文物。', koAnswer: '우리는 소중한 문화재를 잘 보존해야 할 의무가 있다.' }
+    ];
+
+    // 合并题库并打乱
+    const translationQuestions = [];
+    koToZhQuestions.forEach((q) => {
+        translationQuestions.push({
+            words: q.words,
+            direction: 'ko',
+            prompt: q.koExample,
+            answer: q.zhAnswer,
+            type: 'koToZh'
+        });
+    });
+    zhToKoQuestions.forEach((q) => {
+        translationQuestions.push({
+            words: q.words,
+            direction: 'zh',
+            prompt: q.zhPrompt,
+            answer: q.koAnswer,
+            type: 'zhToKo'
+        });
+    });
+
+    shuffleArray(translationQuestions);
+
+    let translationIndex = 0;
+    let translationCardFlipped = false;
+
+    const translationCard = document.getElementById('translationCard');
+    const translationWords = document.getElementById('translationWords');
+    const translationDirection = document.getElementById('translationDirection');
+    const translationPrompt = document.getElementById('translationPrompt');
+    const translationAnswer = document.getElementById('translationAnswer');
+    const translationWrapper = document.getElementById('translationWrapper');
+    const nextTranslationBtn = document.getElementById('nextTranslationBtn');
+    const resetTranslationBtn = document.getElementById('resetTranslationBtn');
+    const translationProgress = document.getElementById('translationProgress');
+
+    function loadTranslation(index) {
+        const q = translationQuestions[index % translationQuestions.length];
+
+        translationWords.innerHTML = '';
+        q.words.forEach(w => {
+            const span = document.createElement('span');
+            span.className = 'translation-word';
+            span.textContent = w;
+            translationWords.appendChild(span);
+        });
+
+        if (q.direction === 'ko') {
+            translationDirection.textContent = '韩语 → 中文（翻译例句）';
+            translationPrompt.innerHTML = `<span class="example-ko">${q.prompt}</span>`;
+        } else {
+            translationDirection.textContent = '中文 → 韩语（用单词翻译长句）';
+            translationPrompt.innerHTML = `<span class="example-zh">${q.prompt}</span>`;
+        }
+
+        translationAnswer.textContent = q.answer;
+
+        if (translationCardFlipped) {
+            translationCard.classList.remove('flipped');
+            translationCardFlipped = false;
+        }
+
+        translationProgress.textContent = `第 ${(index % translationQuestions.length) + 1} / ${translationQuestions.length} 题`;
+    }
+
+    function flipTranslation() {
+        translationCard.classList.toggle('flipped');
+        translationCardFlipped = translationCard.classList.contains('flipped');
+    }
+
+    translationWrapper.addEventListener('click', (e) => {
+        if (e.target.closest('.reset-btn')) return;
+        flipTranslation();
+    });
+
+    nextTranslationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        translationIndex = (translationIndex + 1) % translationQuestions.length;
+        loadTranslation(translationIndex);
+    });
+
+    resetTranslationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        translationIndex = 0;
+        shuffleArray(translationQuestions);
+        loadTranslation(translationIndex);
+    });
+
+    // ==================== 关卡切换 ====================
+    const level1Btn = document.getElementById('level1Btn');
+    const level2Btn = document.getElementById('level2Btn');
+    const level1Panel = document.getElementById('level1Panel');
+    const level2Panel = document.getElementById('level2Panel');
+
+    function showLevel(level) {
+        if (level === 1) {
+            level1Panel.classList.remove('hidden');
+            level2Panel.classList.add('hidden');
+            level1Btn.classList.add('active');
+            level2Btn.classList.remove('active');
+        } else {
+            level1Panel.classList.add('hidden');
+            level2Panel.classList.remove('hidden');
+            level1Btn.classList.remove('active');
+            level2Btn.classList.add('active');
+            loadTranslation(translationIndex);
+        }
+    }
+
+    level1Btn.addEventListener('click', () => showLevel(1));
+    level2Btn.addEventListener('click', () => showLevel(2));
+
+    // ==================== 初始化 ====================
+    initCardOrder();
+    loadCard(0, true);
+    loadTranslation(0);
+
+    window.speechSynthesis.getVoices();
+    showLevel(1);
+</script>
+</body>
+</html>
